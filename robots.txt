@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 
 # Sitemaps
-Sitemap: https://body-prayer-web.vercel.app/sitemap.xml
+Sitemap: https://luxor-prayer.vercel.app/sitemap.xml

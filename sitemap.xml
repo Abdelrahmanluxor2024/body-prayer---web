@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <url>
+    <loc>https://body-prayer-web.vercel.app/</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://body-prayer-web.vercel.app/" />
+    <image:image>
+      <image:loc>https://body-prayer-web.vercel.app/assets/images/logo.png</image:loc>
+      <image:title>مواقيت الصلاة في الأقصر - عبد الرحمن ياسر الاسيوطي</image:title>
+      <image:caption>مواقيت الصلاة الدقيقة لمحافظة الأقصر ومراكزها وإمساكية شهر رمضان</image:caption>
+    </image:image>
+  </url>
+</urlset>

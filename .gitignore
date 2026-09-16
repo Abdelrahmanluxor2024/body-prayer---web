@@ -1,8 +1,19 @@
-﻿# Flutter / Dart
-build/
-.dart_tool/
-.packages
-.pub-cache/
-.pub/
-*.jks
-key.properties
+﻿# Web (Vercel) ignores
+node_modules/
+.vercel/
+.DS_Store
+*.log
+.env
+.env.local
+.env.*.local
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# OS
+Thumbs.db
+
+# Backups
+_backup/

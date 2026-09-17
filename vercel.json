@@ -11,9 +11,9 @@
       ]
     },
     {
-      "source": "/(.*)\\.(css|js|woff2)",
+      "source": "/(.*)\\.(?:css|js|woff2|png|jpg|jpeg|svg|ico|webp|gif)",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+        { "key": "Cache-Control", "value": "public, max-age=86400" }
       ]
     },
     {
@@ -25,8 +25,5 @@
         { "key": "Permissions-Policy", "value": "geolocation=(), microphone=(), camera=()" }
       ]
     }
-  ],
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

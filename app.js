@@ -9,13 +9,27 @@
   'use strict';
 
   // ---------------------------------------------------------------
+  //  SVG ICONS (Crisp, modern, vector-sharp replacements for emojis)
+  // ---------------------------------------------------------------
+  const ICONS = {
+    fajr: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="svg-prayer"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8A9 9 0 0 0 12 3z"/><polygon points="18 4 19 6.5 21.5 6.5 19.5 8 20.5 10.5 18 9 15.5 10.5 16.5 8 14.5 6.5 17 6.5 18 4" fill="currentColor" stroke="none"/></svg>`,
+    sunrise: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="svg-prayer"><path d="M17 18a5 5 0 0 0-10 0"/><line x1="12" y1="9" x2="12" y2="2"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="1" y1="18" x2="23" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/><line x1="23" y1="22" x2="1" y2="22"/><polyline points="8 6 12 2 16 6"/></svg>`,
+    dhuhr: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="svg-prayer"><circle cx="12" cy="12" r="5" fill="currentColor" fill-opacity="0.2"/><line x1="12" y1="1" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.78" y2="4.22"/></svg>`,
+    asr: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="svg-prayer"><circle cx="10" cy="10" r="4.5" fill="currentColor" fill-opacity="0.2"/><line x1="10" y1="2" x2="10" y2="4.5"/><line x1="4.34" y1="4.34" x2="6.1" y2="6.1"/><line x1="2" y1="10" x2="4.5" y2="10"/><line x1="4.34" y1="15.66" x2="6.1" y2="13.9"/><line x1="15.66" y1="4.34" x2="13.9" y2="6.1"/><path d="M14 14l7 7M17 21h4v-4"/></svg>`,
+    maghrib: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="svg-prayer"><path d="M17 18a5 5 0 0 0-10 0"/><line x1="12" y1="2" x2="12" y2="9"/><polyline points="8 5 12 9 16 5"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="1" y1="18" x2="23" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/><line x1="23" y1="22" x2="1" y2="22"/></svg>`,
+    isha: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="svg-prayer"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="currentColor" fill-opacity="0.2"/><circle cx="19" cy="5" r="1.2" fill="currentColor"/><circle cx="14" cy="3" r="0.9" fill="currentColor"/><circle cx="21" cy="9" r="0.9" fill="currentColor"/></svg>`,
+    sun: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-ctrl-icon"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="6.34" y1="17.66" x2="4.93" y2="19.07"/><line x1="19.07" y1="4.93" x2="17.66" y2="6.34"/></svg>`,
+    snowflake: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-ctrl-icon"><line x1="12" y1="2" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="19.07" y2="4.93"/><polyline points="10 4 12 2 14 4"/><polyline points="10 20 12 22 14 20"/><polyline points="4 10 2 12 4 14"/><polyline points="20 10 22 12 20 14"/></svg>`,
+    mosque: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="svg-mosque"><path d="M12 3c-1.5 2-3.5 3.5-3.5 6.5A3.5 3.5 0 0 0 12 13a3.5 3.5 0 0 0 3.5-3.5C15.5 6.5 13.5 5 12 3z"/><path d="M4 10v10M20 10v10M2 20h20"/><path d="M4 10l2-2 2 2M16 10l2-2 2 2"/><path d="M9 20v-5a3 3 0 0 1 6 0v5"/></svg>`
+  };
+
+  // ---------------------------------------------------------------
   //  STATE
   // ---------------------------------------------------------------
   const STORAGE_KEYS = {
     customName: 'lux_customName',
     isSummerTime: 'lux_isSummerTime',
     showIqama: 'lux_showIqama',
-    athanEnabled: 'lux_athanEnabled',
     selectedMonth: 'lux_selectedMonth'
   };
 
@@ -23,13 +37,9 @@
     now: new Date(),
     isSummerTime: readBool(STORAGE_KEYS.isSummerTime, true),
     showIqama: readBool(STORAGE_KEYS.showIqama, true),
-    athanEnabled: readBool(STORAGE_KEYS.athanEnabled, true),
     customName: localStorage.getItem(STORAGE_KEYS.customName) || 'عبد الرحمن ياسر الاسيوطي',
     selectedMonth: parseInt(localStorage.getItem(STORAGE_KEYS.selectedMonth), 10) || (new Date().getMonth() + 1),
-    athanAudio: null,
-    isPlayingAthan: false,
-    lastTriggeredKey: '',
-    lastReminderKey: ''
+    lastTriggeredKey: ''
   };
 
   function readBool(key, fallback) {
@@ -127,7 +137,6 @@
         return {
           key,
           name: meta.name,
-          icon: meta.icon,
           time24: t,
           time12: format12(t),
           remainingSeconds: ps - nowSecs,
@@ -143,7 +152,6 @@
     return {
       key: 'fajr',
       name: 'صلاة الفجر (غداً)',
-      icon: '🌙',
       time24: tf,
       time12: format12(tf),
       remainingSeconds: secsToMidnight + tfSecs,
@@ -186,7 +194,8 @@
     document.querySelectorAll('.clock__s').forEach(el => el.textContent = pad2(n.getSeconds()));
     document.getElementById('gregorianDate').textContent = toArabicGregorian(n);
     document.getElementById('hijriDate').textContent = toHijri(n) || '';
-    document.getElementById('year').textContent = n.getFullYear();
+    const yearEl = document.getElementById('year');
+    if (yearEl) yearEl.textContent = n.getFullYear();
   }
 
   // ---------------------------------------------------------------
@@ -194,7 +203,8 @@
   // ---------------------------------------------------------------
   function renderNextPrayer() {
     const np = getNextPrayerInfo();
-    document.getElementById('npIcon').textContent = np.icon;
+    const iconEl = document.getElementById('npIcon');
+    if (iconEl) iconEl.innerHTML = ICONS[np.key] || ICONS.fajr;
     document.getElementById('npName').textContent = np.name;
     document.getElementById('npTime').textContent = np.time12;
     document.getElementById('npCountdown').textContent = formatDuration(np.remainingSeconds);
@@ -223,6 +233,7 @@
     const today = getTodayData();
     const np = getNextPrayerInfo();
     const container = document.getElementById('prayerList');
+    if (!container) return;
     container.innerHTML = '';
 
     PrayerData.prayerMeta.forEach(meta => {
@@ -236,7 +247,7 @@
       const item = document.createElement('div');
       item.className = `prayer-item ${isNext ? 'prayer-item--next' : ''} ${pastTime ? 'prayer-item--past' : ''}`;
       item.innerHTML = `
-        <div class="prayer-item__icon">${meta.icon}</div>
+        <div class="prayer-item__icon">${ICONS[meta.key] || ''}</div>
         <div class="prayer-item__info">
           <div class="prayer-item__name">${meta.name}</div>
           ${state.showIqama && iqamaTime ? `<div class="prayer-item__iqama">إقامة: ${iqamaTime}</div>` : ''}
@@ -253,29 +264,27 @@
   // ---------------------------------------------------------------
   function renderControls() {
     // Season toggle
-    document.getElementById('seasonIcon').textContent = state.isSummerTime ? '☀️' : '❄️';
+    const seasonIcon = document.getElementById('seasonIcon');
+    if (seasonIcon) seasonIcon.innerHTML = state.isSummerTime ? ICONS.sun : ICONS.snowflake;
     document.getElementById('seasonLabel').textContent = state.isSummerTime ? 'التوقيت الصيفي' : 'التوقيت الشتوي';
-    document.getElementById('toggleSeasonBtn').classList.toggle('ctrl-btn--active', state.isSummerTime);
+    const seasonBtn = document.getElementById('toggleSeasonBtn');
+    if (seasonBtn) seasonBtn.classList.toggle('ctrl-btn--active', state.isSummerTime);
 
     // Iqama toggle
     document.getElementById('iqamaLabel').textContent = state.showIqama ? 'إخفاء الإقامة' : 'إظهار الإقامة';
-    document.getElementById('toggleIqamaBtn').classList.toggle('ctrl-btn--active', state.showIqama);
-
-    // Athan toggle
-    document.getElementById('athanIcon').textContent = state.athanEnabled ? '🔊' : '🔇';
-    document.getElementById('athanLabel').textContent = state.athanEnabled ? 'صوت الأذان: تشغيل' : 'صوت الأذان: إيقاف';
-    document.getElementById('toggleAthanBtn').classList.toggle('ctrl-btn--active', state.athanEnabled);
+    const iqamaBtn = document.getElementById('toggleIqamaBtn');
+    if (iqamaBtn) iqamaBtn.classList.toggle('ctrl-btn--active', state.showIqama);
 
     // Custom name
     document.getElementById('customName').textContent = state.customName;
-    document.getElementById('splashSubtitle').textContent = `⭐ ${state.customName} ⭐`;
+    const splashNameText = document.getElementById('splashNameText');
+    if (splashNameText) splashNameText.textContent = state.customName;
   }
 
   // ---------------------------------------------------------------
-  //  ATHAN ALARM
+  //  SILENT PRAYER REMINDER (No audio playback)
   // ---------------------------------------------------------------
-  function checkAndTriggerAthan() {
-    if (!state.athanEnabled) return;
+  function checkAndTriggerPrayerReminder() {
     const today = getTodayData();
     const n = state.now;
     const hh = n.getHours();
@@ -286,37 +295,25 @@
       if (meta.key === 'sunrise') continue;
       const t = adjustTime(meta.key, today[meta.key]);
       const [ph, pm] = t.split(':').map(Number);
-      if (hh === ph && mm === pm && ss <= 3) {
+      if (hh === ph && mm === pm && ss <= 2) {
         const token = `${n.getMonth() + 1}_${n.getDate()}_${meta.key}`;
         if (state.lastTriggeredKey !== token) {
           state.lastTriggeredKey = token;
-          playAthan(meta.name, meta.icon, format12(t));
+          showPrayerReminder(meta.name, meta.key, format12(t));
         }
       }
     }
   }
 
-  function playAthan(name, icon, time12) {
-    showAthanModal(name, icon, time12);
-    if (!state.athanEnabled) return;
-    state.athanAudio = state.athanAudio || document.getElementById('athanAudio');
-    try {
-      state.athanAudio.currentTime = 0;
-      state.athanAudio.volume = 1;
-      const p = state.athanAudio.play();
-      if (p && p.catch) p.catch(() => {/* autoplay blocked, user needs to tap */});
-      state.isPlayingAthan = true;
-    } catch (e) {
-      console.warn('Athan play error:', e);
-    }
-  }
-
-  function stopAthan() {
-    if (state.athanAudio) {
-      try { state.athanAudio.pause(); state.athanAudio.currentTime = 0; } catch (_) {}
-    }
-    state.isPlayingAthan = false;
-    closeModal('athanModal');
+  function showPrayerReminder(name, key, time12) {
+    const circle = document.getElementById('reminderModalIconCircle');
+    if (circle) circle.innerHTML = ICONS[key] || ICONS.mosque;
+    const nameEl = document.getElementById('reminderModalName');
+    if (nameEl) nameEl.textContent = name;
+    const timeEl = document.getElementById('reminderModalTime');
+    if (timeEl) timeEl.textContent = time12;
+    openModal('prayerReminderModal');
+    showToast(`حان الآن موعد ${name}`);
   }
 
   // ---------------------------------------------------------------
@@ -338,18 +335,12 @@
     document.body.style.overflow = '';
   }
 
-  function showAthanModal(name, icon, time12) {
-    document.getElementById('athanModalIcon').textContent = icon;
-    document.getElementById('athanModalName').textContent = name;
-    document.getElementById('athanModalTime').textContent = time12;
-    openModal('athanModal');
-  }
-
   // ---------------------------------------------------------------
   //  MONTH TABLE
   // ---------------------------------------------------------------
   function renderMonthPicker() {
     const sel = document.getElementById('monthSelect');
+    if (!sel) return;
     sel.innerHTML = '';
     for (let m = 1; m <= 12; m++) {
       const opt = document.createElement('option');
@@ -363,6 +354,7 @@
   function renderMonthTable(month) {
     const list = PrayerData.allMonthsTimes[month] || [];
     const body = document.getElementById('monthTableBody');
+    if (!body) return;
     body.innerHTML = '';
     const today = new Date();
     list.forEach(day => {
@@ -382,15 +374,15 @@
   }
 
   // ---------------------------------------------------------------
-  //  DOWNLOAD AS IMAGE
+  //  DOWNLOAD AS IMAGE (Clean, high-end typography, zero emojis)
   // ---------------------------------------------------------------
   async function downloadCardAsImage() {
     if (typeof html2canvas === 'undefined') {
       showToast('مكتبة الصور قيد التحميل، حاول بعد لحظة');
       return;
     }
-    showToast('⏳ جاري تجهيز الصورة...');
-    // Build a clean card offscreen
+    showToast('جاري تجهيز الصورة بدقة فائقة...');
+
     const today = getTodayData();
     const wrap = document.createElement('div');
     wrap.style.cssText = `
@@ -401,30 +393,30 @@
       direction: rtl;
     `;
     wrap.innerHTML = `
-      <div style="text-align:center; padding:24px; border:2px solid #FFD700; border-radius:22px; background:linear-gradient(135deg,#1E1738,#0F0A1F);">
-        <h1 style="margin:0; font-family:'Amiri',serif; color:#FFD700; font-size:38px; text-shadow:0 0 14px rgba(255,215,0,0.45);">
+      <div style="text-align:center; padding:28px 24px; border:2px solid #FFD700; border-radius:24px; background:linear-gradient(145deg,#1C1535,#0D0B1C); box-shadow:0 12px 40px rgba(0,0,0,0.6);">
+        <h1 style="margin:0; font-family:'Amiri',serif; color:#FFD700; font-size:36px; font-weight:700; text-shadow:0 0 14px rgba(255,215,0,0.45);">
           مواقيت الصلاة - الأقصر
         </h1>
-        <p style="margin:6px 0 4px; color:#FFE082; font-size:18px; font-weight:700;">
-          ⭐ ${state.customName} ⭐
+        <p style="margin:8px 0 6px; color:#FFE082; font-size:18px; font-weight:700;">
+          ${state.customName}
         </p>
-        <p style="margin:0 0 20px; color:rgba(255,255,255,0.65); font-size:14px;">
+        <p style="margin:0 0 20px; color:rgba(255,255,255,0.7); font-size:14px; font-weight:500;">
           ${toArabicGregorian(state.now)} • ${toHijri(state.now)}
         </p>
-        <table style="width:100%; border-collapse:collapse; margin-top:14px; font-size:18px;">
+        <table style="width:100%; border-collapse:collapse; margin-top:10px; font-size:18px;">
           ${PrayerData.prayerMeta.map(m => `
             <tr style="border-bottom:1px solid rgba(255,215,0,0.18);">
-              <td style="padding:12px 8px; text-align:right; color:#fff; font-family:'Amiri',serif; font-size:20px;">
-                ${m.icon} ${m.name}
+              <td style="padding:14px 12px; text-align:right; color:#FFFFFF; font-family:'Amiri',serif; font-size:22px; font-weight:700;">
+                ${m.name}
               </td>
-              <td style="padding:12px 8px; text-align:left; color:#FFE082; font-weight:700; font-family:'Cairo',sans-serif;">
+              <td style="padding:14px 12px; text-align:left; color:#FFE082; font-weight:700; font-family:'Cairo',sans-serif; font-size:20px; direction:ltr;">
                 ${format12(adjustTime(m.key, today[m.key]))}
               </td>
             </tr>
           `).join('')}
         </table>
-        <p style="margin-top:24px; color:rgba(255,255,255,0.55); font-size:13px;">
-          📱 +201064106070 • تطوير: عبد الرحمن ياسر الاسيوطي
+        <p style="margin-top:24px; color:rgba(255,255,255,0.6); font-size:13px; font-weight:600;">
+          محافظة الأقصر • تطوير: عبد الرحمن ياسر الاسيوطي • 01064106070
         </p>
       </div>
     `;
@@ -441,10 +433,10 @@
       a.download = `moaakit-luxor-${stamp}.png`;
       a.href = dataUrl;
       a.click();
-      showToast('✅ تم تحميل الصورة بنجاح');
+      showToast('تم تحميل كارت المواقيت بنجاح');
     } catch (e) {
       console.error('Image gen error:', e);
-      showToast('❌ تعذر إنشاء الصورة، حاول مرة أخرى');
+      showToast('تعذر إنشاء الصورة، حاول مرة أخرى');
     } finally {
       wrap.remove();
     }
@@ -456,6 +448,7 @@
   let toastTimer = null;
   function showToast(msg) {
     const t = document.getElementById('toast');
+    if (!t) return;
     t.textContent = msg;
     t.classList.add('show');
     if (toastTimer) clearTimeout(toastTimer);
@@ -467,22 +460,29 @@
   // ---------------------------------------------------------------
   function wireEvents() {
     // Edit name
-    document.getElementById('editNameBtn').addEventListener('click', () => {
-      const inp = document.getElementById('customNameInput');
-      inp.value = state.customName;
-      openModal('editNameModal');
-      setTimeout(() => inp.focus(), 100);
-    });
-    document.getElementById('saveNameBtn').addEventListener('click', () => {
-      const v = document.getElementById('customNameInput').value.trim();
-      if (v) {
-        state.customName = v;
-        localStorage.setItem(STORAGE_KEYS.customName, v);
-        renderControls();
-        showToast('✅ تم تحديث الاسم بنجاح');
-      }
-      closeModal('editNameModal');
-    });
+    const editBtn = document.getElementById('editNameBtn');
+    if (editBtn) {
+      editBtn.addEventListener('click', () => {
+        const inp = document.getElementById('customNameInput');
+        inp.value = state.customName;
+        openModal('editNameModal');
+        setTimeout(() => inp.focus(), 100);
+      });
+    }
+
+    const saveNameBtn = document.getElementById('saveNameBtn');
+    if (saveNameBtn) {
+      saveNameBtn.addEventListener('click', () => {
+        const v = document.getElementById('customNameInput').value.trim();
+        if (v) {
+          state.customName = v;
+          localStorage.setItem(STORAGE_KEYS.customName, v);
+          renderControls();
+          showToast('تم حفظ وتحديث الاسم بنجاح');
+        }
+        closeModal('editNameModal');
+      });
+    }
 
     // Close modal on overlay click & X
     document.querySelectorAll('[data-close]').forEach(el => {
@@ -495,58 +495,65 @@
     });
 
     // Season toggle
-    document.getElementById('toggleSeasonBtn').addEventListener('click', () => {
-      state.isSummerTime = !state.isSummerTime;
-      writeBool(STORAGE_KEYS.isSummerTime, state.isSummerTime);
-      renderControls();
-      renderNextPrayer();
-      renderPrayerList();
-      showToast(state.isSummerTime ? '☀️ تم التحويل للتوقيت الصيفي' : '❄️ تم التحويل للتوقيت الشتوي');
-    });
+    const toggleSeasonBtn = document.getElementById('toggleSeasonBtn');
+    if (toggleSeasonBtn) {
+      toggleSeasonBtn.addEventListener('click', () => {
+        state.isSummerTime = !state.isSummerTime;
+        writeBool(STORAGE_KEYS.isSummerTime, state.isSummerTime);
+        renderControls();
+        renderNextPrayer();
+        renderPrayerList();
+        showToast(state.isSummerTime ? 'تم التحويل إلى التوقيت الصيفي' : 'تم التحويل إلى التوقيت الشتوي');
+      });
+    }
 
     // Iqama toggle
-    document.getElementById('toggleIqamaBtn').addEventListener('click', () => {
-      state.showIqama = !state.showIqama;
-      writeBool(STORAGE_KEYS.showIqama, state.showIqama);
-      renderControls();
-      renderPrayerList();
-      showToast(state.showIqama ? '⏱️ تم إظهار الإقامة' : '⏱️ تم إخفاء الإقامة');
-    });
-
-    // Athan toggle
-    document.getElementById('toggleAthanBtn').addEventListener('click', () => {
-      state.athanEnabled = !state.athanEnabled;
-      writeBool(STORAGE_KEYS.athanEnabled, state.athanEnabled);
-      if (!state.athanEnabled) stopAthan();
-      renderControls();
-      showToast(state.athanEnabled ? '🔊 تم تشغيل صوت الأذان' : '🔇 تم إيقاف صوت الأذان');
-    });
+    const toggleIqamaBtn = document.getElementById('toggleIqamaBtn');
+    if (toggleIqamaBtn) {
+      toggleIqamaBtn.addEventListener('click', () => {
+        state.showIqama = !state.showIqama;
+        writeBool(STORAGE_KEYS.showIqama, state.showIqama);
+        renderControls();
+        renderPrayerList();
+        showToast(state.showIqama ? 'تم إظهار أوقات الإقامة' : 'تم إخفاء أوقات الإقامة');
+      });
+    }
 
     // Month modal
-    document.getElementById('openMonthBtn').addEventListener('click', () => {
-      renderMonthPicker();
-      renderMonthTable(state.selectedMonth);
-      openModal('monthModal');
-    });
-    document.getElementById('monthSelect').addEventListener('change', e => {
-      const m = parseInt(e.target.value, 10);
-      state.selectedMonth = m;
-      localStorage.setItem(STORAGE_KEYS.selectedMonth, String(m));
-      renderMonthTable(m);
-      renderPrayerList();
-      renderNextPrayer();
-    });
+    const openMonthBtn = document.getElementById('openMonthBtn');
+    if (openMonthBtn) {
+      openMonthBtn.addEventListener('click', () => {
+        renderMonthPicker();
+        renderMonthTable(state.selectedMonth);
+        openModal('monthModal');
+      });
+    }
+
+    const monthSelect = document.getElementById('monthSelect');
+    if (monthSelect) {
+      monthSelect.addEventListener('change', e => {
+        const m = parseInt(e.target.value, 10);
+        state.selectedMonth = m;
+        localStorage.setItem(STORAGE_KEYS.selectedMonth, String(m));
+        renderMonthTable(m);
+        renderPrayerList();
+        renderNextPrayer();
+      });
+    }
 
     // Download image
-    document.getElementById('downloadImgBtn').addEventListener('click', downloadCardAsImage);
-
-    // Stop athan
-    document.getElementById('stopAthanBtn').addEventListener('click', stopAthan);
+    const downloadImgBtn = document.getElementById('downloadImgBtn');
+    if (downloadImgBtn) {
+      downloadImgBtn.addEventListener('click', downloadCardAsImage);
+    }
 
     // Enter key in name input
-    document.getElementById('customNameInput').addEventListener('keydown', e => {
-      if (e.key === 'Enter') document.getElementById('saveNameBtn').click();
-    });
+    const nameInput = document.getElementById('customNameInput');
+    if (nameInput) {
+      nameInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter') document.getElementById('saveNameBtn').click();
+      });
+    }
   }
 
   // ---------------------------------------------------------------
@@ -558,23 +565,7 @@
     // Re-render every second is fine for clock + countdown
     renderNextPrayer();
     renderPrayerList();
-    checkAndTriggerAthan();
-  }
-
-  // ---------------------------------------------------------------
-  //  SPLASH
-  // ---------------------------------------------------------------
-  function hideSplash() {
-    const s = document.getElementById('splash');
-    if (!s) return;
-    s.classList.add('fade-out');
-    setTimeout(() => {
-      s.style.display = 'none';
-      const app = document.getElementById('app');
-      app.hidden = false;
-      app.style.opacity = 0;
-      requestAnimationFrame(() => { app.style.transition = 'opacity 0.6s ease'; app.style.opacity = 1; });
-    }, 800);
+    checkAndTriggerPrayerReminder();
   }
 
   // ---------------------------------------------------------------
@@ -593,9 +584,6 @@
 
     // Events
     wireEvents();
-
-    // Hide splash after 2.6s
-    setTimeout(hideSplash, 2600);
 
     // Continuous tick
     setInterval(tick, 1000);

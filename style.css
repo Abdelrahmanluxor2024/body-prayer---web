@@ -48,7 +48,7 @@ html, body {
   padding: 0;
   background: var(--bg-1);
   color: var(--text-1);
-  font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+  font-family: 'Cairo', 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -65,143 +65,20 @@ body {
   direction: rtl;
 }
 
-/* =================================================================
- * SPLASH SCREEN
- * ================================================================= */
-
-.splash {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  display: flex;
-  flex-direction: column;
+.sparkle-icon {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  background:
-    radial-gradient(700px 400px at 50% 35%, rgba(255, 215, 0, 0.12), transparent 60%),
-    linear-gradient(180deg, #0A0A1A 0%, #1A0A2E 50%, #0D1117 100%);
-  animation: splashFadeIn 0.6s ease;
-}
-
-.splash.fade-out {
-  animation: splashFadeOut 0.8s ease forwards;
-}
-
-.splash__stars {
-  position: absolute; inset: 0;
-  background-image:
-    radial-gradient(2px 2px at 20% 30%, #FFD700 50%, transparent 51%),
-    radial-gradient(1.5px 1.5px at 70% 60%, #FFE082 50%, transparent 51%),
-    radial-gradient(1px 1px at 40% 80%, #FFD700 50%, transparent 51%),
-    radial-gradient(1.5px 1.5px at 80% 20%, #fff 50%, transparent 51%),
-    radial-gradient(1px 1px at 10% 50%, #FFE082 50%, transparent 51%),
-    radial-gradient(1.5px 1.5px at 90% 70%, #FFD700 50%, transparent 51%);
-  opacity: 0.7;
-  animation: starsTwinkle 6s ease-in-out infinite;
-}
-
-@keyframes starsTwinkle {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 0.95; }
-}
-
-.splash__content {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-  padding: 20px;
-  animation: splashRise 1.2s ease forwards;
-}
-
-@keyframes splashRise {
-  from { opacity: 0; transform: translateY(20px) scale(0.95); }
-  to   { opacity: 1; transform: translateY(0)    scale(1); }
-}
-
-.splash__logo-wrap {
-  padding: 4px;
-  border-radius: 28px;
-  border: 2px solid var(--gold-1);
-  box-shadow:
-    0 0 35px var(--gold-glow),
-    inset 0 0 12px rgba(255, 215, 0, 0.25);
-  background: linear-gradient(145deg, #1E1738, #0F0A1F);
-}
-
-.splash__logo {
-  width: 220px; height: 220px;
-  border-radius: 24px;
-  display: block;
-  object-fit: cover;
-  animation: logoPulse 2.4s ease-in-out infinite;
-}
-
-.splash__emoji {
-  width: 220px; height: 220px;
-  border-radius: 24px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 110px;
-  background: #1E1233;
-}
-
-@keyframes logoPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.5); }
-  50%      { box-shadow: 0 0 30px 8px rgba(255, 215, 0, 0.35); }
-}
-
-.splash__title {
-  margin: 0;
-  font-family: 'Amiri', serif;
-  font-size: clamp(28px, 6vw, 38px);
-  font-weight: 700;
+  width: 18px;
+  height: 18px;
   color: var(--gold-1);
-  text-shadow: 0 0 18px var(--gold-glow);
-  letter-spacing: 0.5px;
+  filter: drop-shadow(0 0 8px var(--gold-glow));
+  flex-shrink: 0;
 }
-
-.splash__subtitle {
-  margin: 0;
-  font-family: 'Amiri', serif;
-  font-size: clamp(18px, 4.5vw, 26px);
-  color: var(--gold-2);
-  font-weight: 700;
+.sparkle-icon svg {
+  width: 100%;
+  height: 100%;
 }
-
-.splash__loader {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.splash__loader span {
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  background: var(--gold-1);
-  animation: loader 1.4s ease-in-out infinite;
-  box-shadow: 0 0 10px var(--gold-glow);
-}
-.splash__loader span:nth-child(2) { animation-delay: 0.2s; }
-.splash__loader span:nth-child(3) { animation-delay: 0.4s; }
-
-@keyframes loader {
-  0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
-  40%           { transform: scale(1.2); opacity: 1; }
-}
-
-.splash__footer {
-  position: absolute;
-  bottom: 24px;
-  left: 0; right: 0;
-  text-align: center;
-  color: var(--text-4);
-  font-size: 13px;
-  letter-spacing: 0.5px;
-}
-
-@keyframes splashFadeIn  { from { opacity: 0; } to { opacity: 1; } }
-@keyframes splashFadeOut { from { opacity: 1; } to { opacity: 0; visibility: hidden; } }
 
 /* =================================================================
  * MAIN APP
@@ -262,18 +139,24 @@ body {
   border-radius: 12px;
   border: 2px solid var(--gold-1);
   display: flex; align-items: center; justify-content: center;
-  font-size: 30px; flex-shrink: 0;
+  flex-shrink: 0;
+  background: rgba(255, 215, 0, 0.08);
+}
+.svg-mosque-header {
+  width: 30px; height: 30px;
+  color: var(--gold-1);
 }
 
 .app-header__title {
   margin: 0;
-  font-family: 'Amiri', serif;
+  font-family: 'Amiri', 'Tajawal', serif;
   font-size: clamp(18px, 4.4vw, 22px);
   color: var(--gold-1);
   text-shadow: 0 0 10px var(--gold-glow);
   font-weight: 700;
+  letter-spacing: 0;
 }
-.app-header__subtitle { margin: 2px 0 0; color: var(--text-3); font-size: 12px; }
+.app-header__subtitle { margin: 2px 0 0; color: var(--text-3); font-size: 12px; letter-spacing: 0; }
 
 .app-header__custom {
   display: flex; align-items: center; gap: 8px;
@@ -321,28 +204,42 @@ body {
   justify-content: center;
   gap: 6px;
   font-family: 'Cairo', monospace;
-  font-weight: 700;
-  font-size: clamp(38px, 11vw, 60px);
+  font-weight: 800;
+  font-size: clamp(38px, 11vw, 62px);
   color: var(--gold-1);
-  text-shadow: 0 0 16px var(--gold-glow);
+  text-shadow: 0 0 18px var(--gold-glow);
   letter-spacing: 2px;
   direction: ltr;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
 .clock__sep { animation: blink 1.2s infinite; }
 @keyframes blink { 50% { opacity: 0.3; } }
 
+.clock__date-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
 .clock__date {
-  margin-top: 6px;
-  font-size: 16px;
+  font-size: 15px;
   color: var(--text-2);
   font-weight: 600;
+  letter-spacing: 0;
+}
+.clock__date-divider {
+  color: var(--gold-1);
+  opacity: 0.6;
 }
 .clock__hijri {
-  margin-top: 4px;
-  font-size: 14px;
+  font-size: 15px;
   color: var(--gold-2);
   font-family: 'Amiri', serif;
   font-weight: 700;
+  letter-spacing: 0;
 }
 
 /* Next prayer card */
@@ -370,39 +267,57 @@ body {
 .next-prayer__label {
   font-size: 13px;
   color: var(--text-3);
-  letter-spacing: 1px;
+  letter-spacing: 0;
   margin-bottom: 6px;
+  font-weight: 600;
 }
 .next-prayer__main {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 12px;
   margin-bottom: 4px;
 }
-.next-prayer__icon { font-size: 28px; }
+.next-prayer__icon {
+  width: 36px; height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold-1);
+  filter: drop-shadow(0 0 10px var(--gold-glow));
+}
+.next-prayer__icon .svg-prayer {
+  width: 32px; height: 32px;
+}
 .next-prayer__name {
-  font-family: 'Amiri', serif;
+  font-family: 'Amiri', 'Tajawal', serif;
   font-size: clamp(22px, 6vw, 30px);
   color: var(--gold-1);
   font-weight: 700;
   text-shadow: 0 0 12px var(--gold-glow);
+  letter-spacing: 0;
 }
 .next-prayer__time {
   font-size: 16px;
   color: var(--green-1);
   font-weight: 700;
-  margin: 4px 0 12px;
+  margin: 4px 0 10px;
+  direction: ltr;
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
 .next-prayer__countdown {
   font-family: 'Cairo', monospace;
-  font-size: clamp(28px, 9vw, 42px);
+  font-size: clamp(30px, 9.5vw, 44px);
   font-weight: 800;
   color: var(--gold-2);
-  letter-spacing: 4px;
+  letter-spacing: 3px;
   text-shadow: 0 0 14px var(--gold-glow);
   direction: ltr;
   margin: 4px 0 14px;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
 .next-prayer__progress {
   width: 100%;
@@ -420,10 +335,10 @@ body {
   box-shadow: 0 0 10px var(--gold-glow);
 }
 
-/* Controls */
+/* Controls (Balanced 4-button layout) */
 .controls {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 10px;
   margin-bottom: 14px;
 }
@@ -433,28 +348,41 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 12px 14px;
+  padding: 13px 12px;
   background: linear-gradient(135deg, var(--bg-3), var(--bg-2));
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-md);
   color: var(--text-1);
-  font-family: 'Cairo', sans-serif;
+  font-family: 'Cairo', 'Tajawal', sans-serif;
   font-weight: 600;
   font-size: 14px;
   cursor: pointer;
-  transition: transform 0.15s, border-color 0.2s, box-shadow 0.2s;
+  transition: transform 0.15s, border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  letter-spacing: 0;
 }
 .ctrl-btn:hover {
   border-color: var(--border-gold);
-  box-shadow: 0 0 12px var(--gold-glow);
-  transform: translateY(-1px);
+  box-shadow: 0 0 14px var(--gold-glow);
+  transform: translateY(-2px);
 }
 .ctrl-btn:active { transform: translateY(0); }
-.ctrl-btn__icon { font-size: 18px; }
+.ctrl-btn__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold-1);
+  flex-shrink: 0;
+}
+.svg-ctrl-icon {
+  width: 19px;
+  height: 19px;
+  stroke: currentColor;
+}
 .ctrl-btn--active {
   border-color: var(--gold-1);
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.18), rgba(255, 215, 0, 0.06));
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.20), rgba(255, 215, 0, 0.08));
   color: var(--gold-2);
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.2);
 }
 
 /* Prayer list */
@@ -463,23 +391,30 @@ body {
 .prayer-item {
   display: grid;
   grid-template-columns: auto 1fr auto auto;
-  gap: 12px;
+  gap: 14px;
   align-items: center;
-  padding: 14px 16px;
+  padding: 14px 18px;
   background: linear-gradient(135deg, var(--bg-3), var(--bg-2));
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-md);
-  transition: border-color 0.3s, transform 0.2s;
+  transition: border-color 0.3s, transform 0.2s, box-shadow 0.2s;
 }
 .prayer-item:hover {
   border-color: var(--border-gold);
-  transform: translateX(-3px);
+  transform: translateX(-4px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 .prayer-item--next {
   border-color: var(--gold-1);
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.12), rgba(255, 215, 0, 0.04));
-  box-shadow: 0 0 18px rgba(255, 215, 0, 0.2);
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.14), rgba(255, 215, 0, 0.04));
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.25);
+  animation: nextPrayerPulse 3s ease-in-out infinite alternate;
+}
+
+@keyframes nextPrayerPulse {
+  0% { box-shadow: 0 0 12px rgba(255, 215, 0, 0.18); }
+  100% { box-shadow: 0 0 24px rgba(255, 215, 0, 0.35); }
 }
 
 .prayer-item--past { opacity: 0.55; }
@@ -490,45 +425,64 @@ body {
   background: rgba(255, 215, 0, 0.08);
   border: 1px solid var(--border-gold);
   display: flex; align-items: center; justify-content: center;
-  font-size: 22px;
   flex-shrink: 0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.prayer-item:hover .prayer-item__icon {
+  box-shadow: 0 0 12px var(--gold-glow);
+  transform: scale(1.05);
+}
+
+.svg-prayer {
+  width: 22px;
+  height: 22px;
+  color: var(--gold-1);
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .prayer-item__info { min-width: 0; }
 .prayer-item__name {
   font-weight: 700;
   color: var(--text-1);
-  font-size: 16px;
-  font-family: 'Amiri', serif;
+  font-size: 17px;
+  font-family: 'Amiri', 'Tajawal', serif;
+  letter-spacing: 0;
 }
 .prayer-item__iqama {
   font-size: 12px;
   color: var(--text-3);
   margin-top: 2px;
+  font-weight: 500;
+  letter-spacing: 0;
 }
 
 .prayer-item__time {
   font-family: 'Cairo', monospace;
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 700;
   color: var(--gold-2);
   direction: ltr;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
 .prayer-item__countdown-tag {
   font-size: 11px;
+  font-weight: 600;
   color: var(--green-1);
   background: rgba(0, 214, 143, 0.12);
   border: 1px solid rgba(0, 214, 143, 0.4);
-  padding: 3px 8px;
+  padding: 4px 10px;
   border-radius: 999px;
   white-space: nowrap;
   display: none;
+  letter-spacing: 0;
 }
 .prayer-item--next .prayer-item__countdown-tag { display: inline-block; }
 
 /* Contact */
 .contact-card {
-  padding: 20px 18px;
+  padding: 22px 18px;
   background: linear-gradient(180deg, rgba(20, 20, 43, 0.92), rgba(14, 14, 31, 0.92));
   border: 1px solid var(--border-gold);
   border-radius: var(--radius-lg);
@@ -538,33 +492,44 @@ body {
 }
 .contact-card__title {
   margin: 0;
-  font-family: 'Amiri', serif;
+  font-family: 'Amiri', 'Tajawal', serif;
   color: var(--gold-1);
-  font-size: 22px;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0;
 }
 .contact-card__sub {
-  margin: 4px 0 14px;
+  margin: 4px 0 16px;
   color: var(--gold-2);
   font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0;
 }
 .contact-card__btns {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   flex-wrap: wrap;
   justify-content: center;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 .contact-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  padding: 12px 18px;
+  padding: 12px 22px;
   border-radius: var(--radius-md);
   font-weight: 700;
   text-decoration: none;
-  font-family: 'Cairo', sans-serif;
+  font-family: 'Cairo', 'Tajawal', sans-serif;
   font-size: 15px;
   transition: transform 0.15s, box-shadow 0.2s;
+  letter-spacing: 0;
+}
+.contact-btn__icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
 }
 .contact-btn--call {
   background: linear-gradient(135deg, #1A8E5A, var(--green-2));
@@ -576,12 +541,24 @@ body {
   color: #fff;
   box-shadow: 0 4px 14px rgba(18, 140, 126, 0.35);
 }
-.contact-btn:hover { transform: translateY(-2px); }
+.contact-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.4); }
 .contact-card__phone {
   margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   color: var(--text-2);
   letter-spacing: 1px;
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 16px;
+  direction: ltr;
+}
+.contact-card__phone-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--gold-2);
+  flex-shrink: 0;
 }
 
 /* SEO content (visually hidden but crawlable) */
@@ -638,12 +615,14 @@ body {
   max-width: 480px;
   max-height: 90vh;
   overflow-y: auto;
-  background: linear-gradient(180deg, #1F1235, #0F231A, #0A0A1A);
+  background: linear-gradient(180deg, #1C1230, #100C22, #0A0A1A);
   border: 2px solid var(--gold-1);
-  border-radius: 22px;
-  box-shadow: 0 0 30px rgba(255, 215, 0, 0.35);
-  padding: 18px;
+  border-radius: 24px;
+  box-shadow: 0 0 35px rgba(255, 215, 0, 0.35);
+  padding: 20px;
   animation: modalRise 0.35s ease;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 .modal__panel--wide { max-width: 720px; }
 .modal__panel--athan { max-width: 420px; text-align: center; }
@@ -654,15 +633,28 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 10px;
-  margin-bottom: 12px;
+  padding-bottom: 12px;
+  margin-bottom: 14px;
   border-bottom: 1px solid var(--border-soft);
+}
+.modal__head-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.modal__icon {
+  width: 22px;
+  height: 22px;
+  color: var(--gold-1);
+  flex-shrink: 0;
 }
 .modal__head h3 {
   margin: 0;
   color: var(--gold-1);
-  font-family: 'Amiri', serif;
-  font-size: 20px;
+  font-family: 'Amiri', 'Tajawal', serif;
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: 0;
 }
 .modal__close {
   background: transparent;
@@ -672,11 +664,14 @@ body {
   border-radius: 50%;
   font-size: 18px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.2s;
 }
-.modal__close:hover { color: var(--gold-1); border-color: var(--gold-1); }
+.modal__close:hover { color: var(--gold-1); border-color: var(--gold-1); transform: scale(1.1); }
 
-.modal__body p { color: var(--text-2); margin: 0 0 10px; font-size: 14px; }
+.modal__body p { color: var(--text-2); margin: 0 0 10px; font-size: 14px; letter-spacing: 0; line-height: 1.6; }
 .modal__hint { color: var(--text-4); font-size: 12px; margin-top: 8px; }
 
 .modal__foot {
@@ -684,36 +679,37 @@ body {
   gap: 10px;
   justify-content: flex-start;
   padding-top: 14px;
-  margin-top: 12px;
+  margin-top: 14px;
   border-top: 1px solid var(--border-soft);
 }
 
 .text-input {
   width: 100%;
   padding: 12px 14px;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.35);
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-sm);
   color: var(--text-1);
-  font-family: 'Cairo', sans-serif;
+  font-family: 'Cairo', 'Tajawal', sans-serif;
   font-size: 15px;
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 .text-input:focus {
   border-color: var(--gold-1);
-  box-shadow: 0 0 8px var(--gold-glow);
+  box-shadow: 0 0 10px var(--gold-glow);
 }
 
 .btn {
-  padding: 10px 22px;
+  padding: 11px 24px;
   border-radius: var(--radius-sm);
   border: none;
   cursor: pointer;
-  font-family: 'Cairo', sans-serif;
+  font-family: 'Cairo', 'Tajawal', sans-serif;
   font-weight: 700;
   font-size: 15px;
   transition: transform 0.15s, box-shadow 0.2s;
+  letter-spacing: 0;
 }
 .btn:active { transform: translateY(1px); }
 .btn--primary {
@@ -721,39 +717,35 @@ body {
   color: #000;
   box-shadow: var(--shadow-gold);
 }
-.btn--primary:hover { box-shadow: 0 8px 24px var(--gold-glow); }
+.btn--primary:hover { box-shadow: 0 8px 24px var(--gold-glow); transform: translateY(-1px); }
 .btn--ghost {
   background: transparent;
   border: 1px solid var(--border-soft);
   color: var(--text-2);
 }
 .btn--ghost:hover { border-color: var(--gold-1); color: var(--gold-1); }
-.btn--danger {
-  background: linear-gradient(135deg, #E53935, #B71C1C);
-  color: #fff;
-  box-shadow: 0 6px 18px rgba(229, 57, 53, 0.35);
-}
 
 /* Month picker */
 .month-picker {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
   flex-wrap: wrap;
 }
 .month-picker label {
   color: var(--text-2);
   font-weight: 600;
   font-size: 14px;
+  letter-spacing: 0;
 }
 .month-picker select {
-  padding: 8px 12px;
+  padding: 8px 14px;
   background: rgba(255, 215, 0, 0.1);
   border: 1px solid var(--border-gold);
   border-radius: var(--radius-sm);
   color: var(--gold-2);
-  font-family: 'Cairo', sans-serif;
+  font-family: 'Cairo', 'Tajawal', sans-serif;
   font-weight: 700;
   font-size: 14px;
   outline: none;
@@ -762,20 +754,23 @@ body {
 .month-picker select option { background: var(--bg-2); color: var(--text-1); }
 
 .month-table-wrap {
-  max-height: 50vh;
+  max-height: 52vh;
   overflow-y: auto;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-soft);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-gold) transparent;
 }
 
 .month-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
 }
 .month-table th,
 .month-table td {
-  padding: 8px 6px;
+  padding: 10px 8px;
   text-align: center;
   border-bottom: 1px solid var(--border-soft);
   color: var(--text-2);
@@ -785,40 +780,51 @@ body {
   top: 0;
   background: var(--bg-3);
   color: var(--gold-2);
-  font-family: 'Amiri', serif;
+  font-family: 'Amiri', 'Tajawal', serif;
   font-weight: 700;
+  font-size: 15px;
+  z-index: 2;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
-.month-table tr:hover td { background: rgba(255, 215, 0, 0.05); }
+.month-table tr:hover td { background: rgba(255, 215, 0, 0.06); }
 .month-table td.day-cell { color: var(--gold-1); font-weight: 700; }
-.month-table tr.today td { background: rgba(255, 215, 0, 0.12); }
-.month-table tr.today td.day-cell { color: var(--gold-2); text-shadow: 0 0 6px var(--gold-glow); }
+.month-table tr.today td { background: rgba(255, 215, 0, 0.14); }
+.month-table tr.today td.day-cell { color: var(--gold-2); text-shadow: 0 0 8px var(--gold-glow); }
 
-/* Athan alarm modal */
+/* Prayer reminder modal */
 .athan-icon-circle {
-  width: 96px; height: 96px;
-  margin: 0 auto 10px;
+  width: 88px; height: 88px;
+  margin: 0 auto 12px;
   display: flex; align-items: center; justify-content: center;
   border-radius: 50%;
-  background: rgba(255, 215, 0, 0.15);
+  background: rgba(255, 215, 0, 0.12);
   border: 2px solid var(--gold-1);
-  font-size: 48px;
-  animation: athanPulse 1.6s ease-in-out infinite;
+  animation: athanPulse 2s ease-in-out infinite;
+  color: var(--gold-1);
 }
+.athan-icon-circle .svg-prayer,
+.athan-icon-circle .svg-mosque-modal {
+  width: 44px;
+  height: 44px;
+}
+
 @keyframes athanPulse {
   0%, 100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.5); }
   50%      { box-shadow: 0 0 30px 6px rgba(255, 215, 0, 0.35); }
 }
-.athan-modal__label { color: var(--text-2); font-size: 16px; margin: 4px 0; }
+.athan-modal__label { color: var(--text-2); font-size: 16px; margin: 4px 0; font-weight: 600; letter-spacing: 0; }
 .athan-modal__name {
   color: var(--gold-1);
-  font-family: 'Amiri', serif;
-  font-size: 30px;
+  font-family: 'Amiri', 'Tajawal', serif;
+  font-size: 32px;
   margin: 4px 0;
   text-shadow: 0 0 14px var(--gold-glow);
+  font-weight: 700;
+  letter-spacing: 0;
 }
 .athan-modal__time {
   display: inline-block;
-  padding: 6px 18px;
+  padding: 6px 20px;
   border-radius: 999px;
   background: rgba(0, 214, 143, 0.15);
   border: 1px solid var(--green-1);
@@ -826,20 +832,24 @@ body {
   font-weight: 700;
   font-size: 16px;
   margin: 8px 0 14px;
+  direction: ltr;
+  font-variant-numeric: tabular-nums;
 }
 .athan-modal__verse {
   font-family: 'Amiri', serif;
   color: var(--gold-2);
-  font-size: 14px;
-  line-height: 1.7;
+  font-size: 15px;
+  line-height: 1.8;
   margin: 14px 8px;
+  letter-spacing: 0;
 }
 .athan-modal__dua {
   color: var(--text-4);
-  font-size: 11px;
-  line-height: 1.6;
+  font-size: 12px;
+  line-height: 1.7;
   margin-top: 14px;
   padding: 0 10px;
+  letter-spacing: 0;
 }
 
 /* Toast */
@@ -848,19 +858,22 @@ body {
   bottom: 24px;
   left: 50%;
   transform: translateX(-50%) translateY(100px);
-  background: rgba(20, 20, 43, 0.95);
+  background: rgba(20, 20, 43, 0.96);
   border: 1px solid var(--border-gold);
-  color: var(--text-1);
-  padding: 12px 20px;
+  color: var(--gold-2);
+  padding: 12px 22px;
   border-radius: 999px;
   font-size: 14px;
+  font-weight: 600;
   z-index: 2000;
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--shadow-card), 0 0 16px rgba(255, 215, 0, 0.2);
   opacity: 0;
   transition: opacity 0.3s, transform 0.3s;
   pointer-events: none;
   max-width: 90%;
   text-align: center;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 .toast.show {
   opacity: 1;
@@ -871,22 +884,23 @@ body {
  * RESPONSIVE
  * ================================================================= */
 
-@media (max-width: 520px) {
-  .app-header__custom-name { max-width: 110px; font-size: 12px; }
-  .app-header__title { font-size: 17px; }
-  .clock { font-size: 38px; }
-  .next-prayer__countdown { font-size: 28px; }
+@media (max-width: 600px) {
   .controls { grid-template-columns: repeat(2, 1fr); }
-  .prayer-item { grid-template-columns: auto 1fr auto; padding: 12px; }
+  .app-header__custom-name { max-width: 120px; font-size: 13px; }
+  .app-header__title { font-size: 17px; }
+  .clock { font-size: 40px; }
+  .next-prayer__countdown { font-size: 30px; }
+  .prayer-item { grid-template-columns: auto 1fr auto; padding: 12px 14px; }
   .prayer-item__countdown-tag { display: none !important; }
 }
 
-@media (min-width: 521px) {
+@media (min-width: 601px) {
   .prayer-item__countdown-tag { display: inline-block !important; }
 }
 
 @media (max-width: 380px) {
-  .controls { grid-template-columns: 1fr 1fr; }
+  .controls { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .ctrl-btn { padding: 10px 8px; font-size: 13px; }
   .contact-card__btns { flex-direction: column; }
   .contact-btn { width: 100%; justify-content: center; }
 }

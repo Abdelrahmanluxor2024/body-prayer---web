@@ -445,12 +445,12 @@ const PrayerData = (function () {
   };
 
   const prayerMeta = [
-    { key: "fajr",    name: "صلاة الفجر",  icon: "🌙" },
-    { key: "sunrise", name: "الشروق",      icon: "🌅" },
-    { key: "dhuhr",   name: "صلاة الظهر",  icon: "☀️" },
-    { key: "asr",     name: "صلاة العصر",  icon: "🌤️" },
-    { key: "maghrib", name: "صلاة المغرب", icon: "🌇" },
-    { key: "isha",    name: "صلاة العشاء", icon: "🌃" }
+    { key: "fajr",    name: "صلاة الفجر" },
+    { key: "sunrise", name: "الشروق" },
+    { key: "dhuhr",   name: "صلاة الظهر" },
+    { key: "asr",     name: "صلاة العصر" },
+    { key: "maghrib", name: "صلاة المغرب" },
+    { key: "isha",    name: "صلاة العشاء" }
   ];
 
   return {

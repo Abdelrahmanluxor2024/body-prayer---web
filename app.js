@@ -345,9 +345,19 @@
   // ---------------------------------------------------------------
   function renderClock() {
     const n = state.now;
-    document.querySelectorAll('.clock__h').forEach(el => el.textContent = pad2(W.hours(n)));
-    document.querySelectorAll('.clock__m').forEach(el => el.textContent = pad2(W.minutes(n)));
-    document.querySelectorAll('.clock__s').forEach(el => el.textContent = pad2(W.seconds(n)));
+    // 12-hour clock (ص / م) — same convention as every other time on the page
+    const h24 = W.hours(n);
+    const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
+    const period = h24 >= 12 ? 'م' : 'ص';
+    document.querySelectorAll('.clock__h').forEach(el => setNodeText(el, String(h12)));
+    document.querySelectorAll('.clock__m').forEach(el => setNodeText(el, pad2(W.minutes(n))));
+    document.querySelectorAll('.clock__s').forEach(el => setNodeText(el, pad2(W.seconds(n))));
+    document.querySelectorAll('.clock__period').forEach(el => setNodeText(el, period));
+    const clockEl = document.getElementById('clock');
+    if (clockEl) {
+      const label = `الساعة الآن ${h12}:${pad2(W.minutes(n))} ${period} بتوقيت الأقصر`;
+      if (clockEl.getAttribute('aria-label') !== label) clockEl.setAttribute('aria-label', label);
+    }
 
     // Dates only change once a day
     const sig = `${W.year(n)}-${W.month(n)}-${W.day(n)}`;
@@ -388,6 +398,10 @@
 
   function setText(id, text) {
     const el = document.getElementById(id);
+    if (el && el.textContent !== text) el.textContent = text;
+  }
+
+  function setNodeText(el, text) {
     if (el && el.textContent !== text) el.textContent = text;
   }
 

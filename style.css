@@ -200,21 +200,38 @@ body {
 
 .clock {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: center;
-  gap: 6px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  max-width: 100%;
+  gap: 5px;
   font-family: 'Cairo', monospace;
   font-weight: 800;
-  font-size: clamp(38px, 11vw, 62px);
+  /* Fluid size: never overflows on 320px phones, caps at 62px on desktop.
+     The plain px value is a fallback for very old browsers without clamp(). */
+  font-size: 44px;
+  font-size: clamp(30px, 10vw, 62px);
+  line-height: 1.15;
   color: var(--gold-1);
   text-shadow: 0 0 18px var(--gold-glow);
-  letter-spacing: 2px;
+  letter-spacing: 1px;
   direction: ltr;
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum", "lnum";
 }
 .clock__sep { animation: blink 1.2s infinite; }
 @keyframes blink { 50% { opacity: 0.3; } }
+.clock__period {
+  font-family: 'Cairo', 'Tajawal', sans-serif;
+  font-size: 0.42em;
+  font-weight: 700;
+  color: var(--gold-2);
+  letter-spacing: 0;
+  margin-left: 4px;
+  text-shadow: 0 0 10px var(--gold-glow);
+  align-self: baseline;
+}
 
 .clock__date-wrap {
   display: flex;
@@ -921,7 +938,8 @@ body {
   .controls { grid-template-columns: repeat(2, 1fr); }
   .app-header__custom-name { max-width: 120px; font-size: 13px; }
   .app-header__title { font-size: 17px; }
-  .clock { font-size: 40px; }
+  .clock { font-size: 38px; font-size: clamp(30px, 10.5vw, 44px); gap: 4px; letter-spacing: 0.5px; }
+  .clock-card { padding: 18px 10px 16px; }
   .next-prayer__countdown { font-size: 30px; }
   .prayer-item { grid-template-columns: auto 1fr auto; padding: 12px 14px; }
   .prayer-item__countdown-tag { display: none !important; }
@@ -932,6 +950,8 @@ body {
 }
 
 @media (max-width: 380px) {
+  .clock { font-size: 30px; font-size: clamp(26px, 9.5vw, 36px); gap: 3px; letter-spacing: 0; }
+  .clock__date, .clock__hijri { font-size: 13.5px; }
   .controls { grid-template-columns: 1fr 1fr; gap: 8px; }
   .ctrl-btn { padding: 10px 8px; font-size: 13px; }
   .contact-card__btns { flex-direction: column; }

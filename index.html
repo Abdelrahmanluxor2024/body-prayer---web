@@ -53,7 +53,7 @@
 <!-- html2canvas (for downloading prayer card as image) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
 
-<link rel="stylesheet" href="style.css?v=20260921" />
+<link rel="stylesheet" href="style.css?v=20260921b" />
 
 <!-- Structured Data: WebSite + Organization + LocalBusiness -->
 <script type="application/ld+json">
@@ -134,8 +134,8 @@
 
   <!-- Live clock + date -->
   <section class="clock-card">
-    <div class="clock" id="clock">
-      <span class="clock__h">00</span><span class="clock__sep">:</span><span class="clock__m">00</span><span class="clock__sep">:</span><span class="clock__s">00</span>
+    <div class="clock" id="clock" role="timer" aria-live="off" aria-label="الساعة الآن بتوقيت الأقصر">
+      <span class="clock__h">12</span><span class="clock__sep">:</span><span class="clock__m">00</span><span class="clock__sep">:</span><span class="clock__s">00</span> <span class="clock__period" id="clockPeriod">ص</span>
     </div>
     <div class="clock__date-wrap">
       <div class="clock__date" id="gregorianDate">—</div>
@@ -316,8 +316,8 @@
 <div id="toast" class="toast" aria-live="polite"></div>
 
 <!-- Scripts: data first, then app (bump ?v= after every change to bust caches) -->
-<script src="prayer-data.js?v=20260921"></script>
-<script src="app.js?v=20260921"></script>
+<script src="prayer-data.js?v=20260921b"></script>
+<script src="app.js?v=20260921b"></script>
 
 </body>
 </html>

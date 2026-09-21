@@ -31,6 +31,7 @@
     isha: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="svg-prayer"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="currentColor" fill-opacity="0.2"/><circle cx="19" cy="5" r="1.2" fill="currentColor"/><circle cx="14" cy="3" r="0.9" fill="currentColor"/><circle cx="21" cy="9" r="0.9" fill="currentColor"/></svg>`,
     sun: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-ctrl-icon"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="6.34" y1="17.66" x2="4.93" y2="19.07"/><line x1="19.07" y1="4.93" x2="17.66" y2="6.34"/></svg>`,
     snowflake: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-ctrl-icon"><line x1="12" y1="2" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="19.07" y2="4.93"/><polyline points="10 4 12 2 14 4"/><polyline points="10 20 12 22 14 20"/><polyline points="4 10 2 12 4 14"/><polyline points="20 10 22 12 20 14"/></svg>`,
+    crown: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" class="svg-crown"><path d="M3 18.5h18" /><path d="M4.2 8.4l3.6 2.7L12 5.4l4.2 5.7 3.6-2.7-1.1 8.2H5.3L4.2 8.4z" fill="currentColor" fill-opacity="0.35"/><circle cx="4.2" cy="7.3" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="4.2" r="1.5" fill="currentColor" stroke="none"/><circle cx="19.8" cy="7.3" r="1.4" fill="currentColor" stroke="none"/></svg>`,
     mosque: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="svg-mosque"><path d="M12 3c-1.5 2-3.5 3.5-3.5 6.5A3.5 3.5 0 0 0 12 13a3.5 3.5 0 0 0 3.5-3.5C15.5 6.5 13.5 5 12 3z"/><path d="M4 10v10M20 10v10M2 20h20"/><path d="M4 10l2-2 2 2M16 10l2-2 2 2"/><path d="M9 20v-5a3 3 0 0 1 6 0v5"/></svg>`
   };
 
@@ -114,6 +115,7 @@
     tableMonth: new Date().getMonth() + 1,
     lastTriggeredKey: '',
     listSignature: '',
+    seoSig: '',
     npIconKey: '',
     dateSignature: ''
   };
@@ -179,6 +181,18 @@
   //  HELPERS
   // ---------------------------------------------------------------
   function pad2(n) { return String(n).padStart(2, '0'); }
+
+  /** Convert Arabic-Indic / Persian digits back to Latin (0-9). */
+  const AR_DIGITS = '٠١٢٣٤٥٦٧٨٩';
+  const FA_DIGITS = '۰۱۲۳۴۵۶۷۸۹';
+  function toLatinDigits(str) {
+    return String(str || '').replace(/[٠-٩۰-۹]/g, ch => {
+      const i = AR_DIGITS.indexOf(ch);
+      if (i > -1) return String(i);
+      const j = FA_DIGITS.indexOf(ch);
+      return j > -1 ? String(j) : ch;
+    });
+  }
 
   function escapeHtml(str) {
     return String(str)
@@ -607,73 +621,242 @@
   }
 
   // ---------------------------------------------------------------
-  //  DOWNLOAD AS IMAGE (Clean, high-end typography, zero emojis)
+  //  SVG → PNG (vector-crisp icons inside the downloaded card)
+  //  html2canvas renders <img> far more reliably than raw <svg>,
+  //  so every icon is rasterised once (and cached) at 3× size.
   // ---------------------------------------------------------------
+  const pngIconCache = {};
+
+  function svgToPngDataUrl(svgMarkup, size, colorHex) {
+    return new Promise(resolve => {
+      if (!svgMarkup) { resolve(''); return; }
+      const svg = svgMarkup
+        .replace('<svg ', `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" `)
+        .replace(/currentColor/g, colorHex);
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const c = document.createElement('canvas');
+          c.width = size;
+          c.height = size;
+          const ctx = c.getContext('2d');
+          ctx.drawImage(img, 0, 0, size, size);
+          resolve(c.toDataURL('image/png'));
+        } catch (e) { resolve(''); }
+      };
+      img.onerror = () => resolve('');
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    });
+  }
+
+  /** Rasterised icon (cached) — returns a PNG data-URL or '' on failure. */
+  async function iconPng(key, size, colorHex) {
+    const cacheKey = `${key}|${size}|${colorHex}`;
+    if (pngIconCache[cacheKey] !== undefined) return pngIconCache[cacheKey];
+    const out = ICONS[key] ? await svgToPngDataUrl(ICONS[key], size, colorHex) : '';
+    pngIconCache[cacheKey] = out;
+    return out;
+  }
+
+  /**
+   * Icon markup for the card: a rasterised PNG when available, otherwise
+   * the inline SVG (kept as a graceful fallback — never a blank spot).
+   */
+  function iconTag(key, png, cssSize, colorHex) {
+    if (png) {
+      return `<img src="${png}" width="${cssSize}" height="${cssSize}" ` +
+             `style="width:${cssSize}px;height:${cssSize}px;display:block;" alt="" />`;
+    }
+    const svg = ICONS[key] || '';
+    return svg.replace('<svg ', `<svg width="${cssSize}" height="${cssSize}" `)
+              .replace(/currentColor/g, colorHex);
+  }
+
+  // ---------------------------------------------------------------
+  //  DOWNLOAD AS IMAGE
+  //  A 3:4 card (1080 × 1440 → exported at 2160 × 2880) built with
+  //  large, perfectly balanced Arabic typography: prayer names with
+  //  their icons, big times and the full Gregorian + Hijri date.
+  // ---------------------------------------------------------------
+  const CARD_W = 1080;
+  const CARD_H = 1440;               // 3:4 exactly
+  const CARD_GOLD = '#FFD700';
+
+  async function buildPrayerCard() {
+    const today = getTodaySchedule();
+    const n = state.now;
+    const np = getNextPrayerInfo();
+    const safeName = escapeHtml(state.customName);
+    // Latin digits everywhere on the card so it matches the app exactly
+    const greg = toLatinDigits(toArabicGregorian(n));
+    const hijri = toLatinDigits(toHijri(n));
+
+    // Rasterise every needed icon in parallel (mosque + crown + 6 prayers)
+    const [mosqueIcon, crownIcon, rowIcons] = await Promise.all([
+      iconPng('mosque', 288, CARD_GOLD),
+      iconPng('crown', 156, CARD_GOLD),
+      Promise.all(today.map(p => iconPng(p.key, 138, CARD_GOLD)))
+    ]);
+
+    const rowsHtml = today.map((p, i) => {
+      const icon = rowIcons[i];
+      const iqamaTag = (state.showIqama && p.iqama12)
+        ? `<span style="font-size:21px;font-weight:600;color:rgba(255,255,255,0.55);letter-spacing:0;">&nbsp;&nbsp;إقامة ${p.iqama12}</span>`
+        : '';
+      const isLast = i === today.length - 1;
+      return `
+        <div style="display:flex;align-items:center;gap:20px;flex:1 1 0;min-height:0;
+                    padding:0 6px;${isLast ? '' : 'border-bottom:1px solid rgba(255,215,0,0.18);'}">
+          <div style="flex:0 0 88px;width:88px;height:88px;border-radius:50%;
+                      border:1px solid rgba(255,215,0,0.45);background:rgba(255,215,0,0.08);
+                      display:flex;align-items:center;justify-content:center;overflow:hidden;">
+            ${iconTag(p.key, icon, 52, CARD_GOLD)}
+          </div>
+          <div style="flex:1 1 auto;text-align:right;font-family:'Noto Kufi Arabic','IBM Plex Sans Arabic',sans-serif;
+                      font-size:43px;font-weight:700;color:#FFFFFF;letter-spacing:0;line-height:1.35;">
+            ${escapeHtml(p.name)}${iqamaTag}
+          </div>
+          <div style="flex:0 0 auto;font-family:'IBM Plex Sans Arabic',sans-serif;font-size:46px;font-weight:700;
+                      color:#FFE082;direction:ltr;letter-spacing:1px;font-variant-numeric:tabular-nums;">
+            ${p.time12}
+          </div>
+        </div>`;
+    }).join('');
+
+    const card = document.createElement('div');
+    card.setAttribute('dir', 'rtl');
+    card.style.cssText = `
+      width:${CARD_W}px; height:${CARD_H}px; box-sizing:border-box; position:relative; overflow:hidden;
+      display:flex; flex-direction:column; padding:44px 48px 38px; direction:rtl; text-align:center;
+      background:linear-gradient(160deg, #0B0B1E 0%, #191341 46%, #0A0A1A 100%);
+      color:#FFFFFF; font-family:'IBM Plex Sans Arabic','Noto Kufi Arabic',sans-serif;
+    `;
+    card.innerHTML = `
+      <!-- double golden frame -->
+      <div style="position:absolute; inset:16px; border:2px solid rgba(255,215,0,0.5); border-radius:30px;"></div>
+      <div style="position:absolute; inset:26px; border:1px solid rgba(255,215,0,0.18); border-radius:22px;"></div>
+
+      <!-- header -->
+      <div style="position:relative; display:flex; align-items:center; justify-content:center; gap:16px; margin-bottom:10px;">
+        ${iconTag('mosque', mosqueIcon, 96, CARD_GOLD)}
+        <div style="text-align:right;">
+          <div style="font-family:'Noto Kufi Arabic',sans-serif; font-size:50px; font-weight:800; color:#FFD700; line-height:1.3; letter-spacing:0;">
+            مواقيت الصلاة — الأقصر
+          </div>
+          <div style="font-size:23px; font-weight:600; color:rgba(255,255,255,0.66); margin-top:4px; letter-spacing:0;">
+            محافظة الأقصر • جمهورية مصر العربية
+          </div>
+        </div>
+      </div>
+
+      <!-- name between two crowns -->
+      <div style="position:relative; align-self:center; display:flex; align-items:center; justify-content:center; gap:14px;
+                  padding:10px 30px; margin-bottom:14px; max-width:900px;
+                  border:2px solid rgba(255,215,0,0.55); border-radius:999px;
+                  background:linear-gradient(135deg, rgba(255,215,0,0.16), rgba(255,215,0,0.04));">
+        ${iconTag('crown', crownIcon, 52, CARD_GOLD)}
+        <span style="font-family:'Noto Kufi Arabic',sans-serif; font-size:36px; font-weight:700; color:#FFE082;
+                     letter-spacing:0; max-width:700px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+          ${safeName}
+        </span>
+        ${iconTag('crown', crownIcon, 52, CARD_GOLD)}
+      </div>
+
+      <!-- date -->
+      <div style="position:relative; padding:14px 18px; margin-bottom:12px; border-radius:20px;
+                  border:1px solid rgba(255,215,0,0.3); background:rgba(255,215,0,0.07);">
+        <div style="font-family:'IBM Plex Sans Arabic',sans-serif; font-size:37px; font-weight:700; color:#FFFFFF; letter-spacing:0;">
+          ${greg}
+        </div>
+        <div style="font-family:'Amiri',serif; font-size:29px; font-weight:700; color:#FFE082; margin-top:4px; letter-spacing:0;">
+          ${hijri || ''}
+        </div>
+      </div>
+
+      <!-- prayer rows -->
+      <div style="position:relative; flex:1 1 auto; display:flex; flex-direction:column; min-height:0;">
+        ${rowsHtml}
+      </div>
+
+      <!-- footer -->
+      <div style="position:relative; margin-top:14px;">
+        <div style="display:inline-block; padding:7px 22px; border-radius:999px;
+                    border:1px solid rgba(255,215,0,0.45); background:rgba(255,215,0,0.10);
+                    font-size:22px; font-weight:700; color:#FFD700; letter-spacing:0;">
+          ${state.isSummerTime ? 'التوقيت الصيفي' : 'التوقيت الشتوي'} • بتوقيت محافظة الأقصر
+        </div>
+        <div style="margin-top:12px; font-size:22px; font-weight:700; color:rgba(255,255,255,0.85); letter-spacing:0;">
+          تطوير: عبد الرحمن ياسر الاسيوطي <span style="color:rgba(255,255,255,0.45);">•</span>
+          <span style="direction:ltr; unicode-bidi:embed;">01064106070</span>
+        </div>
+        <div style="margin-top:6px; font-size:19px; font-weight:600; color:rgba(255,255,255,0.42); direction:ltr; letter-spacing:0.5px;">
+          luxor-prayer.vercel.app
+        </div>
+      </div>
+    `;
+    return { card, nextPrayer: np };
+  }
+
   async function downloadCardAsImage() {
     if (typeof html2canvas === 'undefined') {
       showToast('مكتبة الصور قيد التحميل، حاول بعد لحظة');
       return;
     }
-    showToast('جاري تجهيز الصورة بدقة فائقة...');
+    showToast('جاري تجهيز كارت 3:4 بدقة فائقة...');
 
-    // Make sure the web fonts are ready so the card renders with them
-    if (document.fonts && document.fonts.ready) {
-      try { await document.fonts.ready; } catch (e) { /* ignore */ }
+    // Make sure every web font used inside the card is ready first
+    if (document.fonts) {
+      try {
+        if (document.fonts.ready) await document.fonts.ready;
+        if (document.fonts.load) {
+          await Promise.all([
+            document.fonts.load('700 40px "Noto Kufi Arabic"'),
+            document.fonts.load('700 40px "IBM Plex Sans Arabic"'),
+            document.fonts.load('700 40px "Amiri"')
+          ]);
+        }
+      } catch (e) { /* ignore — fallback fonts still render */ }
     }
 
-    const today = getTodaySchedule();
-    const n = state.now;
-    const safeName = escapeHtml(state.customName);
-    const wrap = document.createElement('div');
-    wrap.style.cssText = `
-      position: fixed; left: -99999px; top: 0;
-      width: 720px; padding: 32px;
-      background: linear-gradient(180deg, #0A0A1A 0%, #14142B 100%);
-      color: #fff; font-family: 'Cairo', Tahoma, sans-serif;
-      direction: rtl;
-    `;
-    wrap.innerHTML = `
-      <div style="text-align:center; padding:28px 24px; border:2px solid #FFD700; border-radius:24px; background:linear-gradient(145deg,#1C1535,#0D0B1C); box-shadow:0 12px 40px rgba(0,0,0,0.6);">
-        <h1 style="margin:0; font-family:'Amiri',serif; color:#FFD700; font-size:36px; font-weight:700; text-shadow:0 0 14px rgba(255,215,0,0.45);">
-          مواقيت الصلاة - الأقصر
-        </h1>
-        <p style="margin:8px 0 6px; color:#FFE082; font-size:18px; font-weight:700;">
-          ${safeName}
-        </p>
-        <p style="margin:0 0 20px; color:rgba(255,255,255,0.7); font-size:14px; font-weight:500;">
-          ${toArabicGregorian(n)} • ${toHijri(n)}
-        </p>
-        <table style="width:100%; border-collapse:collapse; margin-top:10px; font-size:18px;">
-          ${today.map(p => `
-            <tr style="border-bottom:1px solid rgba(255,215,0,0.18);">
-              <td style="padding:14px 12px; text-align:right; color:#FFFFFF; font-family:'Amiri',serif; font-size:22px; font-weight:700;">
-                ${p.name}
-              </td>
-              <td style="padding:14px 12px; text-align:left; color:#FFE082; font-weight:700; font-family:'Cairo',sans-serif; font-size:20px; direction:ltr;">
-                ${p.time12}
-              </td>
-            </tr>
-          `).join('')}
-        </table>
-        <p style="margin-top:18px; color:rgba(255,255,255,0.55); font-size:12px; font-weight:600;">
-          ${state.isSummerTime ? 'بالتوقيت الصيفي' : 'بالتوقيت الشتوي'} • بتوقيت محافظة الأقصر
-        </p>
-        <p style="margin-top:8px; color:rgba(255,255,255,0.6); font-size:13px; font-weight:600;">
-          محافظة الأقصر • تطوير: عبد الرحمن ياسر الاسيوطي • 01064106070
-        </p>
-      </div>
-    `;
-    document.body.appendChild(wrap);
+    const holder = document.createElement('div');
+    holder.style.cssText = 'position:fixed; left:-99999px; top:0; z-index:-1;';
+    let card = null;
+
     try {
-      const canvas = await html2canvas(wrap.firstElementChild, {
+      const built = await buildPrayerCard();
+      card = built.card;
+      holder.appendChild(card);
+      document.body.appendChild(holder);
+
+      const renderAt = (scale) => html2canvas(card, {
         backgroundColor: '#0A0A1A',
-        scale: 2,
-        useCORS: true
+        scale,
+        useCORS: true,
+        logging: false,
+        width: CARD_W,
+        height: CARD_H,
+        windowWidth: 1440,
+        windowHeight: 1800
       });
-      const stamp = `${W.year(n)}-${pad2(W.month(n))}-${pad2(W.day(n))}`;
-      const fileName = `moaakit-luxor-${stamp}.png`;
-      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+
+      let canvas;
+      try {
+        canvas = await renderAt(2);            // 2160 × 2880 (print quality)
+      } catch (e) {
+        canvas = await renderAt(1);            // 1080 × 1440 fallback
+      }
+      if (!canvas || !canvas.width) throw new Error('canvas failed');
+
+      let blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+      if (!blob) {
+        canvas = await renderAt(1);
+        blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+      }
       if (!blob) throw new Error('toBlob failed');
+
+      const n = state.now;
+      const stamp = `${W.year(n)}-${pad2(W.month(n))}-${pad2(W.day(n))}`;
+      const fileName = `mawaqit-aluxor-${stamp}.png`;
 
       // On iOS the download attribute is unreliable → use the native share sheet
       const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) ||
@@ -686,7 +869,7 @@
             showToast('تم تجهيز كارت المواقيت');
             return;
           } catch (e) {
-            if (e && e.name === 'AbortError') return; // user cancelled
+            if (e && e.name === 'AbortError') return;   // user cancelled
           }
         }
       }
@@ -699,12 +882,36 @@
       document.body.appendChild(a);
       a.click();
       setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1500);
-      showToast('تم تحميل كارت المواقيت بنجاح');
+      showToast('تم تحميل الكارت (3:4) بنجاح');
     } catch (e) {
       console.error('Image gen error:', e);
       showToast('تعذر إنشاء الصورة، حاول مرة أخرى');
     } finally {
-      wrap.remove();
+      holder.remove();
+    }
+  }
+
+  // ---------------------------------------------------------------
+  //  CONTENT TEXT (today's times as readable text for users + SEO)
+  // ---------------------------------------------------------------
+  function renderSeoBlock() {
+    const n = state.now;
+    const today = getTodaySchedule();
+    const np = getNextPrayerInfo();
+    const sig = [W.year(n), W.month(n), W.day(n), np.key, state.isSummerTime,
+      Math.floor(np.remainingSeconds / 60)].join('|');
+    if (sig === state.seoSig) return;
+    state.seoSig = sig;
+
+    setText('todayDateLine', `${toArabicGregorian(n)}${toHijri(n) ? ' — ' + toHijri(n) : ''}`);
+    setText('todaySeasonLabel', state.isSummerTime ? 'التوقيت الصيفي' : 'التوقيت الشتوي');
+
+    const el = document.getElementById('todayTimesText');
+    if (el) {
+      const parts = today.map(p => `${p.name} <b>${p.time12}</b>`).join(' • ');
+      el.innerHTML = `مواقيت الصلاة اليوم في محافظة الأقصر: ${parts}. ` +
+        `الصلاة القادمة <b>${escapeHtml(np.name)}</b> الساعة <b>${np.time12}</b> ` +
+        `(متبقّي ${formatDuration(np.remainingSeconds)}).`;
     }
   }
 
@@ -838,6 +1045,31 @@
       downloadImgBtn.addEventListener('click', downloadCardAsImage);
     }
 
+    // Copy developer phone number
+    const copyPhoneBtn = document.getElementById('copyPhoneBtn');
+    if (copyPhoneBtn) {
+      copyPhoneBtn.addEventListener('click', async () => {
+        const phone = '01064106070';
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(phone);
+          } else {
+            const ta = document.createElement('textarea');
+            ta.value = phone;
+            ta.setAttribute('readonly', '');
+            ta.style.cssText = 'position:fixed;left:-9999px;top:0;';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            ta.remove();
+          }
+          showToast('تم نسخ الرقم: 01064106070');
+        } catch (e) {
+          showToast('رقم المطوّر: 01064106070');
+        }
+      });
+    }
+
     // Enter key in name input
     const nameInput = document.getElementById('customNameInput');
     if (nameInput) {
@@ -868,6 +1100,7 @@
     renderClock();
     renderNextPrayer();
     renderPrayerList();
+    renderSeoBlock();
     checkAndTriggerPrayerReminder();
   }
 
@@ -889,6 +1122,7 @@
     renderClock();
     renderNextPrayer();
     renderPrayerList();
+    renderSeoBlock();
     checkAndTriggerPrayerReminder();
 
     // Events

@@ -3,6 +3,17 @@
  *  Prayer Times Luxor — Full JS controller
  *  Author: عبد الرحمن ياسر الاسيوطي
  *  Tel/WhatsApp: 01064106070 (Intl: +201064106070)
+ *
+ *  Time model
+ *  ----------
+ *  - All times in prayer-data.js are stored in Egypt SUMMER time (UTC+3).
+ *  - Every prayer is converted to an absolute instant (UTC ms) and then
+ *    displayed in Luxor's wall-clock time (UTC+3 in summer, UTC+2 in winter).
+ *  - The clock always shows LUXOR time (not the visitor's device time), so
+ *    the countdown is correct even for visitors outside Egypt.
+ *  - Summer/winter time is detected automatically from Egypt's DST law
+ *    (starts last Friday of April 00:00, ends last Thursday of October 24:00).
+ *    The user can still force a mode with the toggle button.
  * ===================================================================== */
 
 (function () {
@@ -24,35 +35,159 @@
   };
 
   // ---------------------------------------------------------------
-  //  STATE
+  //  CONSTANTS
   // ---------------------------------------------------------------
+  const HOUR_MS = 3600000;
+  const DAY_MS = 86400000;
+  const DATA_OFFSET_HOURS = 3;      // prayer-data.js is stored in UTC+3 (summer time)
+  const SUMMER_OFFSET_HOURS = 3;    // Egypt summer time  (EEST)
+  const WINTER_OFFSET_HOURS = 2;    // Egypt standard time (EET)
+  const OVERRIDE_MAX_AGE_MS = 200 * DAY_MS;
+  const DEFAULT_NAME = 'عبد الرحمن ياسر الاسيوطي';
+
   const STORAGE_KEYS = {
     customName: 'lux_customName',
     isSummerTime: 'lux_isSummerTime',
-    showIqama: 'lux_showIqama',
-    selectedMonth: 'lux_selectedMonth'
+    seasonSetAt: 'lux_seasonSetAt',
+    showIqama: 'lux_showIqama'
   };
 
-  const state = {
-    now: new Date(),
-    isSummerTime: readBool(STORAGE_KEYS.isSummerTime, true),
-    showIqama: readBool(STORAGE_KEYS.showIqama, true),
-    customName: localStorage.getItem(STORAGE_KEYS.customName) || 'عبد الرحمن ياسر الاسيوطي',
-    selectedMonth: parseInt(localStorage.getItem(STORAGE_KEYS.selectedMonth), 10) || (new Date().getMonth() + 1),
-    lastTriggeredKey: ''
+  // ---------------------------------------------------------------
+  //  SAFE STORAGE (localStorage may be unavailable in private mode)
+  // ---------------------------------------------------------------
+  const storage = {
+    get(key) { try { return window.localStorage.getItem(key); } catch (e) { return null; } },
+    set(key, val) { try { window.localStorage.setItem(key, String(val)); } catch (e) { /* ignore */ } },
+    remove(key) { try { window.localStorage.removeItem(key); } catch (e) { /* ignore */ } }
   };
 
   function readBool(key, fallback) {
-    const v = localStorage.getItem(key);
+    const v = storage.get(key);
     if (v === null) return fallback;
     return v === 'true';
   }
-  function writeBool(key, val) { localStorage.setItem(key, String(val)); }
+
+  // ---------------------------------------------------------------
+  //  EGYPT DAYLIGHT SAVING TIME RULES
+  //  Summer time starts on the last Friday of April at 00:00 local (EET)
+  //  and ends on the last Thursday of October at 24:00 local (EEST).
+  // ---------------------------------------------------------------
+  function lastWeekdayOfMonth(year, monthIdx, weekday) {
+    const last = new Date(Date.UTC(year, monthIdx + 1, 0));
+    const diff = (last.getUTCDay() - weekday + 7) % 7;
+    return last.getUTCDate() - diff;
+  }
+
+  function egyptDstBounds(year) {
+    const startDay = lastWeekdayOfMonth(year, 3, 5);  // last Friday of April
+    const endDay = lastWeekdayOfMonth(year, 9, 4);    // last Thursday of October
+    return {
+      start: Date.UTC(year, 3, startDay, 0, 0) - WINTER_OFFSET_HOURS * HOUR_MS,  // 00:00 EET
+      end: Date.UTC(year, 9, endDay, 24, 0) - SUMMER_OFFSET_HOURS * HOUR_MS      // 24:00 EEST
+    };
+  }
+
+  /** Is Egypt on summer time at this absolute instant? */
+  function isEgyptSummerTime(date) {
+    const t = date.getTime();
+    const { start, end } = egyptDstBounds(new Date(t).getUTCFullYear());
+    return t >= start && t < end;
+  }
+
+  /** Is a given Luxor calendar day (year, month 1-12, day) in summer time? */
+  function isSummerForDay(year, month, day) {
+    return isEgyptSummerTime(new Date(Date.UTC(year, month - 1, day, 12, 0)));
+  }
+
+  function offsetHours(summer) { return summer ? SUMMER_OFFSET_HOURS : WINTER_OFFSET_HOURS; }
+
+  // ---------------------------------------------------------------
+  //  STATE
+  // ---------------------------------------------------------------
+  const state = {
+    realNow: new Date(),       // real instant
+    now: null,                 // Luxor wall clock (read with getUTC* helpers below)
+    seasonOverride: null,      // null = automatic, true/false = forced by the user
+    isSummerTime: true,        // effective mode
+    showIqama: readBool(STORAGE_KEYS.showIqama, true),
+    customName: storage.get(STORAGE_KEYS.customName) || DEFAULT_NAME,
+    tableMonth: new Date().getMonth() + 1,
+    lastTriggeredKey: '',
+    listSignature: '',
+    npIconKey: '',
+    dateSignature: ''
+  };
+
+  /** Luxor wall-clock date for an instant. Components are read with getUTC*(). */
+  function wallClock(instant, summer) {
+    return new Date(instant + offsetHours(summer) * HOUR_MS);
+  }
+  const W = {
+    year: d => d.getUTCFullYear(),
+    month: d => d.getUTCMonth() + 1,
+    day: d => d.getUTCDate(),
+    hours: d => d.getUTCHours(),
+    minutes: d => d.getUTCMinutes(),
+    seconds: d => d.getUTCSeconds()
+  };
+
+  function effectiveSeason(realDate) {
+    if (state.seasonOverride !== null) return state.seasonOverride;
+    return isEgyptSummerTime(realDate);
+  }
+
+  function seasonForDay(year, month, day) {
+    if (state.seasonOverride !== null) return state.seasonOverride;
+    return isSummerForDay(year, month, day);
+  }
+
+  /** Refresh realNow / now / isSummerTime. Returns true when the season flipped. */
+  function syncClock() {
+    state.realNow = new Date();
+    const summer = effectiveSeason(state.realNow);
+    const flipped = summer !== state.isSummerTime;
+    state.isSummerTime = summer;
+    state.now = wallClock(state.realNow.getTime(), summer);
+    return flipped;
+  }
+
+  function loadSeasonOverride() {
+    const stored = storage.get(STORAGE_KEYS.isSummerTime);
+    if (stored === null) return null;
+    const setAt = parseInt(storage.get(STORAGE_KEYS.seasonSetAt), 10);
+    const nowMs = Date.now();
+    const value = stored === 'true';
+    const auto = isEgyptSummerTime(new Date(nowMs));
+    const stale =
+      !Number.isFinite(setAt) ||                              // legacy value without timestamp
+      nowMs - setAt > OVERRIDE_MAX_AGE_MS ||                  // very old choice
+      isEgyptSummerTime(new Date(setAt)) !== auto ||          // a DST transition happened since
+      value === auto;                                         // override equals automatic mode
+    if (stale) {
+      clearSeasonOverride();
+      return null;
+    }
+    return value;
+  }
+
+  function clearSeasonOverride() {
+    storage.remove(STORAGE_KEYS.isSummerTime);
+    storage.remove(STORAGE_KEYS.seasonSetAt);
+  }
 
   // ---------------------------------------------------------------
   //  HELPERS
   // ---------------------------------------------------------------
   function pad2(n) { return String(n).padStart(2, '0'); }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
 
   function format12(time24) {
     if (!time24 || !time24.includes(':')) return time24;
@@ -61,31 +196,6 @@
     let hh = h % 12;
     if (hh === 0) hh = 12;
     return `${hh}:${pad2(m)} ${period}`;
-  }
-
-  /** Adjust time based on summer/winter mode */
-  function adjustTime(prayerKey, time24) {
-    if (!state.isSummerTime && prayerKey !== 'dhuhr') {
-      const [h, m] = time24.split(':').map(Number);
-      let nh = (h - 1 + 24) % 24;
-      return `${pad2(nh)}:${pad2(m)}`;
-    }
-    return time24;
-  }
-
-  /** Add minutes (HH:MM) */
-  function addMinutes(time24, mins) {
-    const [h, m] = time24.split(':').map(Number);
-    const total = h * 60 + m + mins;
-    const nh = Math.floor((total / 60) % 24);
-    const nm = total % 60;
-    return `${pad2(nh)}:${pad2(nm)}`;
-  }
-
-  /** Time HH:MM to total seconds */
-  function toSeconds(time24) {
-    const [h, m] = time24.split(':').map(Number);
-    return h * 3600 + m * 60;
   }
 
   /** Format duration (seconds → HH:MM:SS) */
@@ -97,91 +207,137 @@
     return `${pad2(h)}:${pad2(m)}:${pad2(s)}`;
   }
 
-  /** Current real-time now-seconds since midnight */
-  function nowSeconds() {
+  function isLeapYear(y) { return (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0; }
+
+  function daysInMonth(year, month) {
+    return [31, isLeapYear(year) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1];
+  }
+
+  /** Data row for a month/day (with graceful fallbacks). */
+  function getRow(month, day) {
+    const list = PrayerData.allMonthsTimes[month] || PrayerData.allMonthsTimes[9] || [];
+    return list.find(d => d.day === day) || list[Math.min(day, list.length) - 1] || list[0];
+  }
+
+  /**
+   * Build the full prayer schedule for a Luxor calendar day.
+   * Each entry has an absolute `instant` (UTC ms) plus display strings
+   * in the wall-clock mode (`summer`) that applies to that day.
+   */
+  function getSchedule(year, month, day, summer) {
+    const row = getRow(month, day);
+    if (!row) return [];
+    return PrayerData.prayerMeta.map(meta => {
+      const [h, mi] = row[meta.key].split(':').map(Number);
+      const instant = Date.UTC(year, month - 1, day, h, mi) - DATA_OFFSET_HOURS * HOUR_MS;
+      const wall = wallClock(instant, summer);
+      const time24 = `${pad2(W.hours(wall))}:${pad2(W.minutes(wall))}`;
+      const iqamaMins = PrayerData.iqamaMinutes[meta.key] || 0;
+      let iqama12 = '';
+      if (iqamaMins > 0) {
+        const iq = wallClock(instant + iqamaMins * 60000, summer);
+        iqama12 = format12(`${pad2(W.hours(iq))}:${pad2(W.minutes(iq))}`);
+      }
+      return {
+        key: meta.key,
+        name: meta.name,
+        instant,
+        time24,
+        time12: format12(time24),
+        iqama12
+      };
+    });
+  }
+
+  function shiftDay(year, month, day, deltaDays) {
+    const d = new Date(Date.UTC(year, month - 1, day) + deltaDays * DAY_MS);
+    return { year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate() };
+  }
+
+  function getTodaySchedule() {
     const n = state.now;
-    return n.getHours() * 3600 + n.getMinutes() * 60 + n.getSeconds();
+    return getSchedule(W.year(n), W.month(n), W.day(n), state.isSummerTime);
   }
 
-  /** Get today's prayer data (from selected month) */
-  function getTodayData() {
-    const list = PrayerData.allMonthsTimes[state.selectedMonth] || PrayerData.allMonthsTimes[9];
-    let day = state.now.getDate();
-    if (day < 1 || day > list.length) day = 1;
-    return list.find(d => d.day === day) || list[0];
+  function getAdjacentSchedule(deltaDays) {
+    const n = state.now;
+    const d = shiftDay(W.year(n), W.month(n), W.day(n), deltaDays);
+    return getSchedule(d.year, d.month, d.day, seasonForDay(d.year, d.month, d.day));
   }
 
-  /** Get tomorrow's fajr */
-  function getTomorrowFajr() {
-    const list = PrayerData.allMonthsTimes[state.selectedMonth] || PrayerData.allMonthsTimes[9];
-    let tomorrow = state.now.getDate() + 1;
-    if (tomorrow > list.length) {
-      const nextMonth = state.selectedMonth === 12 ? 1 : state.selectedMonth + 1;
-      const nextList = PrayerData.allMonthsTimes[nextMonth] || list;
-      return adjustTime('fajr', nextList[0].fajr);
-    }
-    const td = list.find(d => d.day === tomorrow) || list[0];
-    return adjustTime('fajr', td.fajr);
-  }
-
-  /** Get next prayer info */
+  /** Get next prayer info (plus the previous prayer instant for the progress bar). */
   function getNextPrayerInfo() {
-    const today = getTodayData();
-    const nowSecs = nowSeconds();
+    const nowMs = state.realNow.getTime();
+    const today = getTodaySchedule();
 
-    for (const meta of PrayerData.prayerMeta) {
-      const key = meta.key;
-      const t = adjustTime(key, today[key]);
-      const ps = toSeconds(t);
-      if (ps > nowSecs) {
+    for (let i = 0; i < today.length; i++) {
+      const p = today[i];
+      if (p.instant > nowMs) {
+        let prevInstant;
+        if (i > 0) {
+          prevInstant = today[i - 1].instant;
+        } else {
+          const yesterday = getAdjacentSchedule(-1);
+          prevInstant = yesterday.length ? yesterday[yesterday.length - 1].instant : p.instant - 8 * HOUR_MS;
+        }
         return {
-          key,
-          name: meta.name,
-          time24: t,
-          time12: format12(t),
-          remainingSeconds: ps - nowSecs,
+          key: p.key,
+          name: p.name,
+          time24: p.time24,
+          time12: p.time12,
+          instant: p.instant,
+          prevInstant,
+          remainingSeconds: Math.max(0, Math.ceil((p.instant - nowMs) / 1000)),
           isTomorrow: false
         };
       }
     }
 
-    // Past today's prayers → tomorrow fajr
-    const tf = getTomorrowFajr();
-    const tfSecs = toSeconds(tf);
-    const secsToMidnight = (24 * 3600) - nowSecs;
+    // All of today's prayers have passed → tomorrow's Fajr
+    const tomorrow = getAdjacentSchedule(1);
+    const tf = tomorrow[0];
+    const lastToday = today.length ? today[today.length - 1].instant : nowMs;
     return {
       key: 'fajr',
       name: 'صلاة الفجر (غداً)',
-      time24: tf,
-      time12: format12(tf),
-      remainingSeconds: secsToMidnight + tfSecs,
+      time24: tf.time24,
+      time12: tf.time12,
+      instant: tf.instant,
+      prevInstant: lastToday,
+      remainingSeconds: Math.max(0, Math.ceil((tf.instant - nowMs) / 1000)),
       isTomorrow: true
     };
   }
 
-  /** Hijri date conversion (Umm Al-Qura approximation) */
-  function toHijri(date) {
-    try {
-      const fmt = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', {
-        day: 'numeric', month: 'long', year: 'numeric'
-      });
-      return fmt.format(date);
-    } catch (e) {
-      return '';
-    }
+  // ---------------------------------------------------------------
+  //  DATE FORMATTERS (created once — Intl objects are expensive)
+  // ---------------------------------------------------------------
+  let gregFormatter = null;
+  let hijriFormatter = null;
+  try {
+    gregFormatter = new Intl.DateTimeFormat('ar-EG', {
+      timeZone: 'UTC', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+    });
+  } catch (e) { gregFormatter = null; }
+  try {
+    hijriFormatter = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', {
+      timeZone: 'UTC', day: 'numeric', month: 'long', year: 'numeric'
+    });
+  } catch (e) { hijriFormatter = null; }
+
+  /** Hijri date (Umm Al-Qura) for a Luxor wall-clock date */
+  function toHijri(wallDate) {
+    if (!hijriFormatter) return '';
+    try { return hijriFormatter.format(wallDate); } catch (e) { return ''; }
   }
 
-  /** Arabic gregorian date */
-  function toArabicGregorian(date) {
-    try {
-      const fmt = new Intl.DateTimeFormat('ar-EG', {
-        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
-      });
-      return fmt.format(date);
-    } catch (e) {
-      const days = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
-      return `${days[date.getDay()]} ${date.getDate()}/${date.getMonth()+1}/${date.getFullYear()}`;
+  /** Arabic gregorian date for a Luxor wall-clock date */
+  function toArabicGregorian(wallDate) {
+    if (gregFormatter) {
+      try { return gregFormatter.format(wallDate); } catch (e) { /* fall through */ }
     }
+    const days = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+    return `${days[wallDate.getUTCDay()]} ${W.day(wallDate)}/${W.month(wallDate)}/${W.year(wallDate)}`;
   }
 
   // ---------------------------------------------------------------
@@ -189,13 +345,21 @@
   // ---------------------------------------------------------------
   function renderClock() {
     const n = state.now;
-    document.querySelectorAll('.clock__h').forEach(el => el.textContent = pad2(n.getHours()));
-    document.querySelectorAll('.clock__m').forEach(el => el.textContent = pad2(n.getMinutes()));
-    document.querySelectorAll('.clock__s').forEach(el => el.textContent = pad2(n.getSeconds()));
-    document.getElementById('gregorianDate').textContent = toArabicGregorian(n);
-    document.getElementById('hijriDate').textContent = toHijri(n) || '';
-    const yearEl = document.getElementById('year');
-    if (yearEl) yearEl.textContent = n.getFullYear();
+    document.querySelectorAll('.clock__h').forEach(el => el.textContent = pad2(W.hours(n)));
+    document.querySelectorAll('.clock__m').forEach(el => el.textContent = pad2(W.minutes(n)));
+    document.querySelectorAll('.clock__s').forEach(el => el.textContent = pad2(W.seconds(n)));
+
+    // Dates only change once a day
+    const sig = `${W.year(n)}-${W.month(n)}-${W.day(n)}`;
+    if (sig !== state.dateSignature) {
+      state.dateSignature = sig;
+      const g = document.getElementById('gregorianDate');
+      if (g) g.textContent = toArabicGregorian(n);
+      const h = document.getElementById('hijriDate');
+      if (h) h.textContent = toHijri(n) || '';
+      const yearEl = document.getElementById('year');
+      if (yearEl) yearEl.textContent = W.year(n);
+    }
   }
 
   // ---------------------------------------------------------------
@@ -204,58 +368,76 @@
   function renderNextPrayer() {
     const np = getNextPrayerInfo();
     const iconEl = document.getElementById('npIcon');
-    if (iconEl) iconEl.innerHTML = ICONS[np.key] || ICONS.fajr;
-    document.getElementById('npName').textContent = np.name;
-    document.getElementById('npTime').textContent = np.time12;
-    document.getElementById('npCountdown').textContent = formatDuration(np.remainingSeconds);
-
-    // Progress: estimate based on remaining vs interval to previous prayer
-    const today = getTodayData();
-    const list = PrayerData.prayerMeta.map(m => toSeconds(adjustTime(m.key, today[m.key])));
-    const idx = list.findIndex(s => s > nowSeconds());
-    let progress = 0;
-    if (idx > 0) {
-      const interval = list[idx] - list[idx - 1];
-      const elapsed = nowSeconds() - list[idx - 1];
-      progress = Math.max(0, Math.min(100, (elapsed / interval) * 100));
-    } else if (idx === 0) {
-      progress = (nowSeconds() / list[0]) * 100;
+    if (iconEl && state.npIconKey !== np.key) {
+      iconEl.innerHTML = ICONS[np.key] || ICONS.fajr;
+      state.npIconKey = np.key;
     }
-    document.getElementById('npProgress').style.width = `${progress}%`;
+    setText('npName', np.name);
+    setText('npTime', np.time12);
+    setText('npCountdown', formatDuration(np.remainingSeconds));
+
+    // Progress between the previous prayer and the next one
+    const interval = np.instant - np.prevInstant;
+    const elapsed = state.realNow.getTime() - np.prevInstant;
+    const progress = interval > 0 ? Math.max(0, Math.min(100, (elapsed / interval) * 100)) : 0;
+    const bar = document.getElementById('npProgress');
+    if (bar) bar.style.width = `${progress.toFixed(2)}%`;
 
     return np;
   }
 
+  function setText(id, text) {
+    const el = document.getElementById(id);
+    if (el && el.textContent !== text) el.textContent = text;
+  }
+
   // ---------------------------------------------------------------
   //  RENDER — Prayer list
+  //  The DOM is built once per day/mode and only updated every second
+  //  (avoids re-creating the whole list 60 times a minute).
   // ---------------------------------------------------------------
   function renderPrayerList() {
-    const today = getTodayData();
-    const np = getNextPrayerInfo();
     const container = document.getElementById('prayerList');
     if (!container) return;
-    container.innerHTML = '';
 
-    PrayerData.prayerMeta.forEach(meta => {
-      const t = adjustTime(meta.key, today[meta.key]);
-      const t12 = format12(t);
-      const iqamaMins = PrayerData.iqamaMinutes[meta.key] || 0;
-      const iqamaTime = iqamaMins > 0 ? format12(addMinutes(t, iqamaMins)) : '';
-      const pastTime = toSeconds(t) < nowSeconds();
-      const isNext = meta.key === np.key && !pastTime;
+    const today = getTodaySchedule();
+    const np = getNextPrayerInfo();
+    const n = state.now;
+    const signature = [W.year(n), W.month(n), W.day(n), state.isSummerTime, state.showIqama].join('|');
 
-      const item = document.createElement('div');
-      item.className = `prayer-item ${isNext ? 'prayer-item--next' : ''} ${pastTime ? 'prayer-item--past' : ''}`;
-      item.innerHTML = `
-        <div class="prayer-item__icon">${ICONS[meta.key] || ''}</div>
-        <div class="prayer-item__info">
-          <div class="prayer-item__name">${meta.name}</div>
-          ${state.showIqama && iqamaTime ? `<div class="prayer-item__iqama">إقامة: ${iqamaTime}</div>` : ''}
-        </div>
-        <div class="prayer-item__time">${t12}</div>
-        ${isNext ? `<span class="prayer-item__countdown-tag">متبقي ${formatDuration(np.remainingSeconds)}</span>` : ''}
-      `;
-      container.appendChild(item);
+    if (signature !== state.listSignature) {
+      state.listSignature = signature;
+      container.innerHTML = '';
+      today.forEach(p => {
+        const item = document.createElement('div');
+        item.className = 'prayer-item';
+        item.dataset.key = p.key;
+        item.innerHTML = `
+          <div class="prayer-item__icon">${ICONS[p.key] || ''}</div>
+          <div class="prayer-item__info">
+            <div class="prayer-item__name">${p.name}</div>
+            ${state.showIqama && p.iqama12 ? `<div class="prayer-item__iqama">إقامة: ${p.iqama12}</div>` : ''}
+          </div>
+          <div class="prayer-item__time">${p.time12}</div>
+          <span class="prayer-item__countdown-tag"></span>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    const nowMs = state.realNow.getTime();
+    today.forEach(p => {
+      const item = container.querySelector(`.prayer-item[data-key="${p.key}"]`);
+      if (!item) return;
+      const past = p.instant <= nowMs;
+      const isNext = !np.isTomorrow && p.key === np.key;
+      item.classList.toggle('prayer-item--past', past);
+      item.classList.toggle('prayer-item--next', isNext);
+      const tag = item.querySelector('.prayer-item__countdown-tag');
+      if (tag) {
+        const text = isNext ? `متبقي ${formatDuration(np.remainingSeconds)}` : '';
+        if (tag.textContent !== text) tag.textContent = text;
+      }
     });
   }
 
@@ -266,40 +448,40 @@
     // Season toggle
     const seasonIcon = document.getElementById('seasonIcon');
     if (seasonIcon) seasonIcon.innerHTML = state.isSummerTime ? ICONS.sun : ICONS.snowflake;
-    document.getElementById('seasonLabel').textContent = state.isSummerTime ? 'التوقيت الصيفي' : 'التوقيت الشتوي';
+    setText('seasonLabel', state.isSummerTime ? 'التوقيت الصيفي' : 'التوقيت الشتوي');
     const seasonBtn = document.getElementById('toggleSeasonBtn');
-    if (seasonBtn) seasonBtn.classList.toggle('ctrl-btn--active', state.isSummerTime);
+    if (seasonBtn) {
+      seasonBtn.classList.toggle('ctrl-btn--active', state.isSummerTime);
+      seasonBtn.title = state.seasonOverride === null
+        ? 'تبديل التوقيت الصيفي/الشتوي (يتم تحديده تلقائياً)'
+        : 'تبديل التوقيت الصيفي/الشتوي (تم تثبيته يدوياً)';
+    }
 
     // Iqama toggle
-    document.getElementById('iqamaLabel').textContent = state.showIqama ? 'إخفاء الإقامة' : 'إظهار الإقامة';
+    setText('iqamaLabel', state.showIqama ? 'إخفاء الإقامة' : 'إظهار الإقامة');
     const iqamaBtn = document.getElementById('toggleIqamaBtn');
     if (iqamaBtn) iqamaBtn.classList.toggle('ctrl-btn--active', state.showIqama);
 
     // Custom name
-    document.getElementById('customName').textContent = state.customName;
-    const splashNameText = document.getElementById('splashNameText');
-    if (splashNameText) splashNameText.textContent = state.customName;
+    setText('customName', state.customName);
   }
 
   // ---------------------------------------------------------------
   //  SILENT PRAYER REMINDER (No audio playback)
+  //  Fires within the first minute after a prayer time, even if the
+  //  browser throttled our timer while the tab was in the background.
   // ---------------------------------------------------------------
   function checkAndTriggerPrayerReminder() {
-    const today = getTodayData();
+    const nowMs = state.realNow.getTime();
     const n = state.now;
-    const hh = n.getHours();
-    const mm = n.getMinutes();
-    const ss = n.getSeconds();
-
-    for (const meta of PrayerData.prayerMeta) {
-      if (meta.key === 'sunrise') continue;
-      const t = adjustTime(meta.key, today[meta.key]);
-      const [ph, pm] = t.split(':').map(Number);
-      if (hh === ph && mm === pm && ss <= 2) {
-        const token = `${n.getMonth() + 1}_${n.getDate()}_${meta.key}`;
+    const today = getTodaySchedule();
+    for (const p of today) {
+      if (p.key === 'sunrise') continue;
+      if (nowMs >= p.instant && nowMs - p.instant < 60000) {
+        const token = `${W.year(n)}_${W.month(n)}_${W.day(n)}_${p.key}`;
         if (state.lastTriggeredKey !== token) {
           state.lastTriggeredKey = token;
-          showPrayerReminder(meta.name, meta.key, format12(t));
+          showPrayerReminder(p.name, p.key, p.time12);
         }
       }
     }
@@ -308,10 +490,8 @@
   function showPrayerReminder(name, key, time12) {
     const circle = document.getElementById('reminderModalIconCircle');
     if (circle) circle.innerHTML = ICONS[key] || ICONS.mosque;
-    const nameEl = document.getElementById('reminderModalName');
-    if (nameEl) nameEl.textContent = name;
-    const timeEl = document.getElementById('reminderModalTime');
-    if (timeEl) timeEl.textContent = time12;
+    setText('reminderModalName', name);
+    setText('reminderModalTime', time12);
     openModal('prayerReminderModal');
     showToast(`حان الآن موعد ${name}`);
   }
@@ -332,7 +512,7 @@
     if (!m) return;
     m.classList.remove('open');
     m.setAttribute('aria-hidden', 'true');
-    document.body.style.overflow = '';
+    if (!document.querySelector('.modal.open')) document.body.style.overflow = '';
   }
 
   // ---------------------------------------------------------------
@@ -346,31 +526,70 @@
       const opt = document.createElement('option');
       opt.value = m;
       opt.textContent = PrayerData.monthNames[m];
-      if (m === state.selectedMonth) opt.selected = true;
+      if (m === state.tableMonth) opt.selected = true;
       sel.appendChild(opt);
     }
   }
 
   function renderMonthTable(month) {
-    const list = PrayerData.allMonthsTimes[month] || [];
     const body = document.getElementById('monthTableBody');
     if (!body) return;
     body.innerHTML = '';
-    const today = new Date();
-    list.forEach(day => {
+
+    const n = state.now;
+    const year = W.year(n);
+    const todayMonth = W.month(n);
+    const todayDay = W.day(n);
+    const maxDay = daysInMonth(year, month);
+    const list = (PrayerData.allMonthsTimes[month] || []).filter(d => d.day >= 1 && d.day <= maxDay);
+
+    let summerDays = 0;
+    let winterDays = 0;
+    let transitionDay = null;
+    let prevSummer = null;
+
+    list.forEach(dayRow => {
+      const summer = seasonForDay(year, month, dayRow.day);
+      if (summer) summerDays++; else winterDays++;
+      if (prevSummer !== null && prevSummer !== summer) transitionDay = dayRow.day;
+      prevSummer = summer;
+
+      const sched = getSchedule(year, month, dayRow.day, summer);
+      const byKey = {};
+      sched.forEach(p => { byKey[p.key] = p.time12; });
+
       const tr = document.createElement('tr');
-      if (month === today.getMonth() + 1 && day.day === today.getDate()) tr.classList.add('today');
+      if (month === todayMonth && dayRow.day === todayDay) tr.classList.add('today');
+      tr.classList.add(summer ? 'season-summer' : 'season-winter');
       tr.innerHTML = `
-        <td class="day-cell">${day.day}</td>
-        <td>${format12(day.fajr)}</td>
-        <td>${format12(day.sunrise)}</td>
-        <td>${format12(day.dhuhr)}</td>
-        <td>${format12(day.asr)}</td>
-        <td>${format12(day.maghrib)}</td>
-        <td>${format12(day.isha)}</td>
+        <td class="day-cell">${dayRow.day}</td>
+        <td>${byKey.fajr || '—'}</td>
+        <td>${byKey.sunrise || '—'}</td>
+        <td>${byKey.dhuhr || '—'}</td>
+        <td>${byKey.asr || '—'}</td>
+        <td>${byKey.maghrib || '—'}</td>
+        <td>${byKey.isha || '—'}</td>
       `;
       body.appendChild(tr);
     });
+
+    // Explanatory note under the picker
+    const note = document.getElementById('monthNote');
+    if (note) {
+      const monthName = PrayerData.monthNames[month];
+      let text;
+      if (state.seasonOverride !== null) {
+        text = `الأوقات معروضة حسب ${state.seasonOverride ? 'التوقيت الصيفي' : 'التوقيت الشتوي'} (تم تثبيته يدوياً من زر التوقيت).`;
+      } else if (transitionDay && summerDays && winterDays) {
+        const toSummer = seasonForDay(year, month, transitionDay);
+        text = toSummer
+          ? `يبدأ التوقيت الصيفي (+ ساعة) من يوم ${transitionDay} ${monthName} ${year}؛ الأيام السابقة بالتوقيت الشتوي.`
+          : `يبدأ التوقيت الشتوي (- ساعة) من يوم ${transitionDay} ${monthName} ${year}؛ الأيام السابقة بالتوقيت الصيفي.`;
+      } else {
+        text = `الأوقات معروضة حسب ${summerDays ? 'التوقيت الصيفي' : 'التوقيت الشتوي'} لشهر ${monthName} ${year}.`;
+      }
+      note.textContent = text;
+    }
   }
 
   // ---------------------------------------------------------------
@@ -383,7 +602,14 @@
     }
     showToast('جاري تجهيز الصورة بدقة فائقة...');
 
-    const today = getTodayData();
+    // Make sure the web fonts are ready so the card renders with them
+    if (document.fonts && document.fonts.ready) {
+      try { await document.fonts.ready; } catch (e) { /* ignore */ }
+    }
+
+    const today = getTodaySchedule();
+    const n = state.now;
+    const safeName = escapeHtml(state.customName);
     const wrap = document.createElement('div');
     wrap.style.cssText = `
       position: fixed; left: -99999px; top: 0;
@@ -398,24 +624,27 @@
           مواقيت الصلاة - الأقصر
         </h1>
         <p style="margin:8px 0 6px; color:#FFE082; font-size:18px; font-weight:700;">
-          ${state.customName}
+          ${safeName}
         </p>
         <p style="margin:0 0 20px; color:rgba(255,255,255,0.7); font-size:14px; font-weight:500;">
-          ${toArabicGregorian(state.now)} • ${toHijri(state.now)}
+          ${toArabicGregorian(n)} • ${toHijri(n)}
         </p>
         <table style="width:100%; border-collapse:collapse; margin-top:10px; font-size:18px;">
-          ${PrayerData.prayerMeta.map(m => `
+          ${today.map(p => `
             <tr style="border-bottom:1px solid rgba(255,215,0,0.18);">
               <td style="padding:14px 12px; text-align:right; color:#FFFFFF; font-family:'Amiri',serif; font-size:22px; font-weight:700;">
-                ${m.name}
+                ${p.name}
               </td>
               <td style="padding:14px 12px; text-align:left; color:#FFE082; font-weight:700; font-family:'Cairo',sans-serif; font-size:20px; direction:ltr;">
-                ${format12(adjustTime(m.key, today[m.key]))}
+                ${p.time12}
               </td>
             </tr>
           `).join('')}
         </table>
-        <p style="margin-top:24px; color:rgba(255,255,255,0.6); font-size:13px; font-weight:600;">
+        <p style="margin-top:18px; color:rgba(255,255,255,0.55); font-size:12px; font-weight:600;">
+          ${state.isSummerTime ? 'بالتوقيت الصيفي' : 'بالتوقيت الشتوي'} • بتوقيت محافظة الأقصر
+        </p>
+        <p style="margin-top:8px; color:rgba(255,255,255,0.6); font-size:13px; font-weight:600;">
           محافظة الأقصر • تطوير: عبد الرحمن ياسر الاسيوطي • 01064106070
         </p>
       </div>
@@ -427,12 +656,35 @@
         scale: 2,
         useCORS: true
       });
-      const dataUrl = canvas.toDataURL('image/png');
+      const stamp = `${W.year(n)}-${pad2(W.month(n))}-${pad2(W.day(n))}`;
+      const fileName = `moaakit-luxor-${stamp}.png`;
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+      if (!blob) throw new Error('toBlob failed');
+
+      // On iOS the download attribute is unreliable → use the native share sheet
+      const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      if (isIOS && navigator.share && navigator.canShare) {
+        const file = new File([blob], fileName, { type: 'image/png' });
+        if (navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({ files: [file], title: 'مواقيت الصلاة - الأقصر' });
+            showToast('تم تجهيز كارت المواقيت');
+            return;
+          } catch (e) {
+            if (e && e.name === 'AbortError') return; // user cancelled
+          }
+        }
+      }
+
+      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      const stamp = state.now.toISOString().split('T')[0];
-      a.download = `moaakit-luxor-${stamp}.png`;
-      a.href = dataUrl;
+      a.download = fileName;
+      a.href = url;
+      a.style.display = 'none';
+      document.body.appendChild(a);
       a.click();
+      setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1500);
       showToast('تم تحميل كارت المواقيت بنجاح');
     } catch (e) {
       console.error('Image gen error:', e);
@@ -456,6 +708,21 @@
   }
 
   // ---------------------------------------------------------------
+  //  FULL REFRESH (after settings change)
+  // ---------------------------------------------------------------
+  function refreshAll() {
+    syncClock();
+    state.listSignature = '';
+    state.dateSignature = '';
+    renderControls();
+    renderClock();
+    renderNextPrayer();
+    renderPrayerList();
+    const monthModal = document.getElementById('monthModal');
+    if (monthModal && monthModal.classList.contains('open')) renderMonthTable(state.tableMonth);
+  }
+
+  // ---------------------------------------------------------------
   //  EVENT WIRING
   // ---------------------------------------------------------------
   function wireEvents() {
@@ -464,19 +731,20 @@
     if (editBtn) {
       editBtn.addEventListener('click', () => {
         const inp = document.getElementById('customNameInput');
-        inp.value = state.customName;
+        if (inp) inp.value = state.customName;
         openModal('editNameModal');
-        setTimeout(() => inp.focus(), 100);
+        setTimeout(() => inp && inp.focus(), 100);
       });
     }
 
     const saveNameBtn = document.getElementById('saveNameBtn');
     if (saveNameBtn) {
       saveNameBtn.addEventListener('click', () => {
-        const v = document.getElementById('customNameInput').value.trim();
+        const inp = document.getElementById('customNameInput');
+        const v = inp ? inp.value.trim().slice(0, 50) : '';
         if (v) {
           state.customName = v;
-          localStorage.setItem(STORAGE_KEYS.customName, v);
+          storage.set(STORAGE_KEYS.customName, v);
           renderControls();
           showToast('تم حفظ وتحديث الاسم بنجاح');
         }
@@ -494,16 +762,25 @@
       }
     });
 
-    // Season toggle
+    // Season toggle (manual override of the automatic detection)
     const toggleSeasonBtn = document.getElementById('toggleSeasonBtn');
     if (toggleSeasonBtn) {
       toggleSeasonBtn.addEventListener('click', () => {
-        state.isSummerTime = !state.isSummerTime;
-        writeBool(STORAGE_KEYS.isSummerTime, state.isSummerTime);
-        renderControls();
-        renderNextPrayer();
-        renderPrayerList();
-        showToast(state.isSummerTime ? 'تم التحويل إلى التوقيت الصيفي' : 'تم التحويل إلى التوقيت الشتوي');
+        const auto = isEgyptSummerTime(new Date());
+        const next = !state.isSummerTime;
+        if (next === auto) {
+          state.seasonOverride = null;      // back to automatic mode
+          clearSeasonOverride();
+        } else {
+          state.seasonOverride = next;
+          storage.set(STORAGE_KEYS.isSummerTime, next);
+          storage.set(STORAGE_KEYS.seasonSetAt, Date.now());
+        }
+        refreshAll();
+        showToast(
+          (next ? 'تم التحويل إلى التوقيت الصيفي' : 'تم التحويل إلى التوقيت الشتوي') +
+          (state.seasonOverride === null ? ' (تلقائي)' : '')
+        );
       });
     }
 
@@ -512,19 +789,21 @@
     if (toggleIqamaBtn) {
       toggleIqamaBtn.addEventListener('click', () => {
         state.showIqama = !state.showIqama;
-        writeBool(STORAGE_KEYS.showIqama, state.showIqama);
+        storage.set(STORAGE_KEYS.showIqama, state.showIqama);
+        state.listSignature = '';
         renderControls();
         renderPrayerList();
         showToast(state.showIqama ? 'تم إظهار أوقات الإقامة' : 'تم إخفاء أوقات الإقامة');
       });
     }
 
-    // Month modal
+    // Month modal (the picker only affects the table, never the main page)
     const openMonthBtn = document.getElementById('openMonthBtn');
     if (openMonthBtn) {
       openMonthBtn.addEventListener('click', () => {
+        state.tableMonth = W.month(state.now);
         renderMonthPicker();
-        renderMonthTable(state.selectedMonth);
+        renderMonthTable(state.tableMonth);
         openModal('monthModal');
       });
     }
@@ -533,11 +812,9 @@
     if (monthSelect) {
       monthSelect.addEventListener('change', e => {
         const m = parseInt(e.target.value, 10);
-        state.selectedMonth = m;
-        localStorage.setItem(STORAGE_KEYS.selectedMonth, String(m));
+        if (!PrayerData.allMonthsTimes[m]) return;
+        state.tableMonth = m;
         renderMonthTable(m);
-        renderPrayerList();
-        renderNextPrayer();
       });
     }
 
@@ -551,18 +828,30 @@
     const nameInput = document.getElementById('customNameInput');
     if (nameInput) {
       nameInput.addEventListener('keydown', e => {
-        if (e.key === 'Enter') document.getElementById('saveNameBtn').click();
+        if (e.key === 'Enter') {
+          const btn = document.getElementById('saveNameBtn');
+          if (btn) btn.click();
+        }
       });
     }
+
+    // Catch up immediately when the tab becomes visible again
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') tick();
+    });
   }
 
   // ---------------------------------------------------------------
   //  MAIN TICK
   // ---------------------------------------------------------------
   function tick() {
-    state.now = new Date();
+    const flipped = syncClock();
+    if (flipped) {
+      // Automatic DST transition happened while the page was open
+      state.listSignature = '';
+      renderControls();
+    }
     renderClock();
-    // Re-render every second is fine for clock + countdown
     renderNextPrayer();
     renderPrayerList();
     checkAndTriggerPrayerReminder();
@@ -572,15 +861,21 @@
   //  INIT
   // ---------------------------------------------------------------
   function init() {
-    // Sync selected month to current month
-    const currentMonth = new Date().getMonth() + 1;
-    if (PrayerData.allMonthsTimes[currentMonth]) state.selectedMonth = currentMonth;
+    if (typeof PrayerData === 'undefined' || !PrayerData.allMonthsTimes) {
+      console.error('PrayerData is missing — prayer-data.js did not load.');
+      showToast('تعذر تحميل بيانات المواقيت، أعد تحميل الصفحة');
+      return;
+    }
+    state.seasonOverride = loadSeasonOverride();
+    syncClock();
+    state.tableMonth = W.month(state.now);
 
     // Set initial UI
     renderControls();
     renderClock();
     renderNextPrayer();
     renderPrayerList();
+    checkAndTriggerPrayerReminder();
 
     // Events
     wireEvents();

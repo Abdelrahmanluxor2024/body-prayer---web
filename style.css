@@ -241,6 +241,26 @@ body {
   font-weight: 700;
   letter-spacing: 0;
 }
+.clock__tz {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text-4);
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+/* No-JS notice */
+.noscript-banner {
+  max-width: 720px;
+  margin: 16px auto 0;
+  padding: 14px 18px;
+  text-align: center;
+  background: rgba(229, 57, 53, 0.15);
+  border: 1px solid var(--red-1);
+  border-radius: var(--radius-md);
+  color: var(--text-1);
+  font-weight: 600;
+}
 
 /* Next prayer card */
 .next-prayer {
@@ -753,6 +773,19 @@ body {
 }
 .month-picker select option { background: var(--bg-2); color: var(--text-1); }
 
+.month-note {
+  margin: -4px 0 12px;
+  padding: 8px 12px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--gold-2);
+  background: rgba(255, 215, 0, 0.07);
+  border: 1px dashed var(--border-gold);
+  border-radius: var(--radius-sm);
+  letter-spacing: 0;
+}
+.month-note:empty { display: none; }
+
 .month-table-wrap {
   max-height: 52vh;
   overflow-y: auto;
@@ -915,5 +948,5 @@ body {
 
 /* Print */
 @media print {
-  .controls, .contact-card, .splash { display: none; }
+  .controls, .contact-card, .modal, .toast, .stars { display: none; }
 }

@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Sitemap — مواقيت الصلاة - الأقصر (Prayer Times Luxor)
+  Single-page app (HTML/CSS/JS). Times are generated daily from the
+  offline Lunar year table shipped in prayer-data.js, so the page is
+  refreshed every day → changefreq=daily + lastmod is kept current.
+-->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
@@ -7,11 +13,23 @@
     <lastmod>2026-09-21</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="ar-EG" href="https://luxor-prayer.vercel.app/" />
     <xhtml:link rel="alternate" hreflang="ar" href="https://luxor-prayer.vercel.app/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://luxor-prayer.vercel.app/" />
+    <image:image>
+      <image:loc>https://luxor-prayer.vercel.app/assets/images/og-image.jpg</image:loc>
+      <image:title>مواقيت الصلاة اليوم في الأقصر</image:title>
+      <image:caption>جدول مواقيت الصلاة اليومي في محافظة الأقصر مع التاريخ الميلادي والهجري وإمساكية رمضان</image:caption>
+    </image:image>
     <image:image>
       <image:loc>https://luxor-prayer.vercel.app/assets/images/logo.png</image:loc>
       <image:title>مواقيت الصلاة في الأقصر - عبد الرحمن ياسر الاسيوطي</image:title>
-      <image:caption>مواقيت الصلاة الدقيقة لمحافظة الأقصر ومراكزها وإمساكية شهر رمضان</image:caption>
+      <image:caption>شعار موقع مواقيت الصلاة لمحافظة الأقصر ومراكزها وقراها</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://luxor-prayer.vercel.app/assets/images/september_table.png</image:loc>
+      <image:title>جدول مواقيت الصلاة بالأقصر لشهر سبتمبر</image:title>
+      <image:caption>جدول مواقيت الصلاة الكامل لشهر سبتمبر في محافظة الأقصر</image:caption>
     </image:image>
   </url>
 </urlset>

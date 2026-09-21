@@ -1,5 +1,7 @@
 User-agent: *
 Allow: /
 
-# Sitemaps
+User-agent: Googlebot-Image
+Allow: /assets/images/
+
 Sitemap: https://luxor-prayer.vercel.app/sitemap.xml

@@ -114,17 +114,27 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  padding: 12px 14px;
+  gap: 12px;
+  padding: 14px 16px;
   background: linear-gradient(135deg, rgba(20, 20, 43, 0.85), rgba(30, 27, 58, 0.75));
   border: 1px solid var(--border-gold);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
   margin-bottom: 14px;
-  flex-wrap: wrap;
 }
 
-.app-header__brand { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1; }
+.app-header__brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.app-header__text {
+  min-width: 0;
+  flex: 1 1 auto;
+}
 
 .app-header__logo {
   width: 56px; height: 56px;
@@ -150,26 +160,38 @@ body {
 .app-header__title {
   margin: 0;
   font-family: 'Noto Kufi Arabic', 'IBM Plex Sans Arabic', serif;
-  font-size: clamp(18px, 4.4vw, 22px);
+  font-size: clamp(18px, 3vw, 21px);
+  line-height: 1.35;
   color: var(--gold-1);
   text-shadow: 0 0 10px var(--gold-glow);
   font-weight: 700;
   letter-spacing: 0;
 }
-.app-header__subtitle { margin: 2px 0 0; color: var(--text-3); font-size: 12px; letter-spacing: 0; }
+.app-header__subtitle {
+  margin: 3px 0 0;
+  color: var(--text-3);
+  font-size: 12.5px;
+  line-height: 1.45;
+  letter-spacing: 0;
+}
 
 .app-header__custom {
-  display: flex; align-items: center; gap: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  max-width: 100%;
   background: rgba(255, 215, 0, 0.08);
   border: 1px solid var(--border-gold);
   border-radius: 999px;
-  padding: 6px 8px 6px 14px;
+  padding: 5px 16px 5px 5px;
 }
 .app-header__custom-name {
   color: var(--gold-2);
   font-weight: 700;
   font-size: 14px;
-  max-width: 180px;
+  line-height: 1.4;
+  max-width: 220px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -181,6 +203,7 @@ body {
   color: var(--gold-1);
   width: 36px; height: 36px;
   border-radius: 50%;
+  flex-shrink: 0;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   transition: transform 0.2s, background 0.2s;
@@ -881,7 +904,8 @@ body {
 
 .month-table-wrap {
   max-height: 52vh;
-  overflow-y: auto;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-soft);
   scrollbar-width: thin;
@@ -1010,22 +1034,85 @@ body {
  * RESPONSIVE
  * ================================================================= */
 
+@media (max-width: 640px) {
+  .app-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 14px;
+  }
+  .app-header__brand {
+    width: 100%;
+    gap: 12px;
+  }
+  .app-header__logo,
+  .app-header__logo-fallback {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+  }
+  .app-header__title {
+    font-size: clamp(16px, 4.6vw, 19px);
+    line-height: 1.35;
+  }
+  .app-header__subtitle {
+    font-size: clamp(11.5px, 3.2vw, 12.5px);
+    line-height: 1.45;
+  }
+  .app-header__custom {
+    width: 100%;
+    justify-content: space-between;
+    padding: 5px 15px 5px 5px;
+  }
+  .app-header__custom-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: none;
+    font-size: 13.5px;
+    text-align: right;
+  }
+  .app-header .icon-btn {
+    width: 34px;
+    height: 34px;
+  }
+}
+
 @media (max-width: 600px) {
   .controls { grid-template-columns: repeat(2, 1fr); }
-  .app-header__custom-name { max-width: 120px; font-size: 13px; }
-  .app-header__title { font-size: 17px; }
   .clock { font-size: 38px; font-size: clamp(30px, 10.5vw, 44px); gap: 4px; letter-spacing: 0.5px; }
   .clock-card { padding: 18px 10px 16px; }
   .next-prayer__countdown { font-size: 30px; }
   .prayer-item { grid-template-columns: auto 1fr auto; padding: 12px 14px; }
   .prayer-item__countdown-tag { display: none !important; }
+  .month-table { font-size: 12.5px; }
+  .month-table th, .month-table td { padding: 8px 6px; white-space: nowrap; }
+  .month-table th { font-size: 13px; }
 }
 
 @media (min-width: 601px) {
   .prayer-item__countdown-tag { display: inline-block !important; }
 }
 
+@media (max-width: 480px) {
+  .clock__date-wrap { flex-direction: column; gap: 3px; }
+  .clock__date-divider { display: none; }
+}
+
 @media (max-width: 380px) {
+  .app { padding: 14px 12px 50px; }
+  .app-header { padding: 12px; gap: 10px; }
+  .app-header__brand { gap: 10px; }
+  .app-header__logo,
+  .app-header__logo-fallback {
+    width: 46px;
+    height: 46px;
+    border-radius: 11px;
+  }
+  .app-header__title { font-size: clamp(15px, 4.7vw, 17px); }
+  .app-header__subtitle { font-size: 11px; }
+  .app-header__custom { padding: 4px 13px 4px 4px; }
+  .app-header__custom-name { font-size: 13px; }
+  .app-header .icon-btn { width: 32px; height: 32px; }
   .clock { font-size: 30px; font-size: clamp(26px, 9.5vw, 36px); gap: 3px; letter-spacing: 0; }
   .clock__date, .clock__hijri { font-size: 13.5px; }
   .controls { grid-template-columns: 1fr 1fr; gap: 8px; }
